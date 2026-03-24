@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>鐵道模擬駕駛器</title>
+    <style>
+        /* CSS reset & base */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Inter', 'Roboto', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Container for everything */
+        #app-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* YouTube iframes */
+        #visual-player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #audio-player-container {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        /* Landscape warning */
+        #landscape-warning {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            color: white;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-align: center;
+            flex-direction: column;
+            transition: opacity 0.5s;
+        }
+
+        @media screen and (orientation: portrait) {
+            #landscape-warning {
+                display: flex;
+            }
+        }
+
+        /* Glassmorphism shared */
+        .glass-panel {
+            background: rgba(25, 30, 40, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Master Start UI */
+        #startup-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background: rgba(0, 150, 255, 0.8);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        .start-btn:disabled {
+            background: rgba(100, 100, 100, 0.5);
+            cursor: not-allowed;
+        }
+
+        /* Left Controls */
+        #left-panel {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        #left-panel:hover {
+            opacity: 1;
+        }
+
+        .ctrl-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(8px);
+            transition: 0.1s;
+        }
+
+        .ctrl-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.92);
+        }
+
+        /* Speedometer */
+        #speedometer {
+            position: absolute;
+            bottom: 20px;
+            right: 160px;
+            padding: 15px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #speed-value {
+            font-size: 48px;
+            font-weight: bold;
+            font-family: monospace;
+            color: #00ffcc;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        }
+
+        #speed-unit {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Stop Evaluation Popup */
+        #stop-rating {
+            display: none;
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            font-weight: bold;
+            padding: 20px 50px;
+            color: gold;
+            text-shadow: 0 0 20px gold;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            font-style: italic;
+        }
+
+        @keyframes pop-in {
+            0% {
+                transform: translateX(-50%) scale(0.5);
+                opacity: 0;
+            }
+
+            40% {
+                transform: translateX(-50%) scale(1.1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .rating-anim {
+            animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Top Bar */
+        #top-bar {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 20px;
+        }
+
+        .top-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(8px);
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        #video-selector {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 15px;
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            width: 350px;
+        }
+
+        #video-input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-family: monospace;
+        }
+
+        /* Mascon Container */
+        #mascon-container {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: 120px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            box-sizing: border-box;
+            touch-action: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        #mascon-container:hover {
+            opacity: 1;
+        }
+
+        #mascon-track {
+            position: relative;
+            width: 40px;
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            border: 1px inset rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        #mascon-handle {
+            position: absolute;
+            width: 80px;
+            height: 50px;
+            left: -20px;
+            background: linear-gradient(135deg, #ddd, #999);
+            border-radius: 10px;
+            border: 2px solid #fff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-weight: bold;
+            font-size: 18px;
+            transform: translateY(-50%);
+            transition: transform 0.05s;
+            pointer-events: none;
+        }
+
+        .gear-label-container {
+            position: absolute;
+            right: 100%;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-right: 10px;
+        }
+
+        .gear-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: bold;
+            text-align: right;
+            transform: translateY(-50%);
+        }
+
+        .gear-text-indicator {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            width: 100%;
+        }
+
+        .gear-EB {
+            color: #ff3333;
+        }
+
+        .gear-B {
+            color: #ff9933;
+        }
+
+        .gear-N {
+            color: #ffffff;
+        }
+
+        .gear-P {
+            color: #33ccff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="landscape-warning">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="white" style="margin-bottom: 20px;">
+            <path
+                d="M16 1H8C6.9 1 6 1.9 6 3v18c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm-4 21c-.83 0-1.5-.67-1.5-1.5S11.17 19 12 19s1.5.67 1.5 1.5S12.83 22 12 22zm3-3H9V4h6v15z" />
+        </svg>
+        <div>請旋轉手機以橫屏模式遊玩<br><span style="font-size: 16px; opacity: 0.7;">Landscape mode required</span></div>
+    </div>
+
+    <div id="startup-screen">
+        <h1 style="color: white; font-size: 36px; text-shadow: 0 0 20px rgba(0, 150, 255, 0.8);">鐵道駕駛模擬 UI</h1>
+        <p style="color: #aaa; margin-bottom: 40px;">YouTube IFrame API Engine</p>
+        <button id="btn-master-start" class="start-btn" disabled>載入引擎中...</button>
+    </div>
+
+    <!-- YouTube Containers -->
+    <div id="visual-player-container"></div>
+    <div id="audio-player-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="app-container" style="display: none;">
+
+        <!-- 停車判定 UI -->
+        <div id="stop-rating"></div>
+
+        <div id="top-bar">
+            <button id="btn-unmute" class="top-btn"
+                style="display: none; background: rgba(255, 50, 50, 0.6);">切換音訊</button>
+        </div>
+
+        <div id="left-panel">
+            <div class="ctrl-btn" id="btn-fullscreen">全螢幕<br>切換</div>
+            <div class="ctrl-btn" id="btn-change-video">影片<br>網址</div>
+            <div class="ctrl-btn" id="btn-seek-bw">- 60s</div>
+            <div class="ctrl-btn" id="btn-seek-fw">+ 60s</div>
+            <div class="ctrl-btn" id="btn-pause">暫停<br>播放</div>
+        </div>
+
+        <div id="video-selector" class="glass-panel">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">更換 YouTube 影片</div>
+            <input type="text" id="video-input" placeholder="可直接貼上 YouTube 網址" value="">
+            <button id="btn-load-video" class="top-btn"
+                style="background: rgba(0, 150, 255, 0.6); width: 100%; margin-top: 5px;">確認載入</button>
+        </div>
+
+        <div id="speedometer" class="glass-panel">
+            <div id="speed-value">0</div>
+            <div id="speed-unit">km/h</div>
+        </div>
+
+        <!-- Mascon Control -->
+        <div id="mascon-container" class="glass-panel">
+            <div id="gear-display" class="gear-text-indicator gear-N">N</div>
+            <div id="mascon-track">
+                <div class="gear-label-container" id="gear-labels">
+                    <!-- Labels added by JS -->
+                </div>
+                <div id="mascon-handle">EB</div>
+            </div>
+            <div style="font-size: 12px; opacity: 0.5;">MASCON</div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        // === Core Engine State ===
+        let visualPlayer = null;
+        let audioPlayer = null;
+        let apiReady = false;
+        let isStarted = false;
+        let isPaused = false;
+
+        let currentVideoId = 'TpxTlO68CWI';
+
+        // === Independent Audio System ===
+        // 確保音效獨立，不受 YT 影片速度與狀態影響
+        const platformAnnounceAudio = new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg');
+        const doorOpenAudio = new Audio('https://actions.google.com/sounds/v1/doors/sliding_glass_door_open.ogg');
+        const doorCloseAudio = new Audio('https://actions.google.com/sounds/v1/doors/sliding_glass_door_close.ogg');
+        platformAnnounceAudio.volume = 0.8;
+        doorOpenAudio.volume = 1.0;
+        doorCloseAudio.volume = 1.0;
+
+        let audio10kmhPlayed = false;
+        let pGearLocked = false;
+        let stationStateActive = false;
+
+        // === Sync Engine ===
+        let syncCheckInterval = null;
+        let lastSetRate = -1;
+
+        // 重新恢復「真正操控播放速率」的真實駕駛感
+        // 將不同檔位嚴格對應 YouTube 容許的倍速，帶來純粹的加速、減速回饋！
+        // 同時修復斷音問題，秘訣在於：只有畫面(Visual)會變速，音效(Audio)始終維持在 1.0 播報播音！
+        const GEARS = [
+            { id: 0, name: 'EB', rate: 0.0, class: 'gear-EB' },
+            { id: 1, name: 'B4', rate: 0.25, class: 'gear-B' },
+            { id: 2, name: 'B3', rate: 0.5, class: 'gear-B' },
+            { id: 3, name: 'B2', rate: 0.75, class: 'gear-B' },
+            { id: 4, name: 'B1', rate: 0.85, class: 'gear-B' },
+            { id: 5, name: 'N', rate: 1.0, class: 'gear-N' },
+            { id: 6, name: 'P1', rate: 1.25, class: 'gear-P' },
+            { id: 7, name: 'P2', rate: 1.5, class: 'gear-P' },
+            { id: 8, name: 'P3', rate: 2.0, class: 'gear-P' },
+            { id: 9, name: 'P4', rate: 2.5, class: 'gear-P' },
+            { id: 10, name: 'P5', rate: 3.0, class: 'gear-P' }
+        ];
+
+        let currentGearId = 0; // Starts with EB (0.0x / Paused)
+
+        // 停車判定系統相關狀態
+        let brakeScore = 100;
+        let isStoppedState = true;
+
+        // DOM Elements
+        const btnMasterStart = document.getElementById('btn-master-start');
+        const startupScreen = document.getElementById('startup-screen');
+        const appContainer = document.getElementById('app-container');
+        const handle = document.getElementById('mascon-handle');
+        const track = document.getElementById('mascon-track');
+        const gearDisplay = document.getElementById('gear-display');
+        const speedValue = document.getElementById('speed-value');
+
+        // === YouTube API Initialization ===
+        function onYouTubeIframeAPIReady() {
+            apiReady = true;
+            btnMasterStart.textContent = '啟動駕駛台 (START)';
+            btnMasterStart.disabled = false;
+        }
+
+        function createPlayers() {
+            const playerVars = {
+                'autoplay': 1, 'controls': 0, 'disablekb': 1, 'fs': 0,
+                'modestbranding': 1, 'rel': 0, 'showinfo': 0, 'iv_load_policy': 3,
+                'playsinline': 1, 'enablejsapi': 1, 'origin': window.location.origin
+            };
+            const host = 'https://www.youtube-nocookie.com';
+
+            visualPlayer = new YT.Player('visual-player-container', {
+                videoId: currentVideoId, playerVars: playerVars, host: host,
+                events: { 'onReady': onVisualPlayerReady, 'onStateChange': onPlayerStateChange }
+            });
+
+            audioPlayer = new YT.Player('audio-player-container', {
+                videoId: currentVideoId, playerVars: playerVars, host: host,
+                events: { 'onReady': onAudioPlayerReady }
+            });
+        }
+
+        let visualReady = false; let audioReady = false;
+        function checkBothReady() {
+            if (visualReady && audioReady && !isStarted) {
+                visualPlayer.mute();
+                audioPlayer.unMute();
+                audioPlayer.setVolume(100);
+
+                startupScreen.style.display = 'none';
+                appContainer.style.display = 'block';
+                isStarted = true;
+
+                applyGearEffect(currentGearId);
+                startSyncEngine();
+                updateSpeedometer();
+            }
+        }
+
+        function onVisualPlayerReady(event) { visualReady = true; checkBothReady(); }
+        function onAudioPlayerReady(event) { audioReady = true; checkBothReady(); }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                visualPlayer.seekTo(0); audioPlayer.seekTo(0);
+            }
+            if (event.data === YT.PlayerState.PLAYING && visualPlayer.setPlaybackQuality) {
+                visualPlayer.setPlaybackQuality('hd1080');
+            }
+        }
+
+        btnMasterStart.addEventListener('click', () => {
+            btnMasterStart.textContent = '連線中...';
+            btnMasterStart.disabled = true;
+            createPlayers();
+            setTimeout(() => { document.getElementById('btn-unmute').style.display = 'block'; }, 4000);
+        });
+
+        function startSyncEngine() {
+            if (syncCheckInterval) clearInterval(syncCheckInterval);
+            syncCheckInterval = setInterval(() => {
+                if (!isStarted || isPaused || isSeeking) return;
+
+                if (visualPlayer.getPlayerState && audioPlayer.getPlayerState) {
+                    const vState = visualPlayer.getPlayerState();
+                    const aState = audioPlayer.getPlayerState();
+
+                    // 確保影片沒有被 YT 的 buffering 循環卡住
+                    if (currentGearId > 0 && (vState === YT.PlayerState.PAUSED || vState === YT.PlayerState.UNSTARTED)) {
+                        visualPlayer.playVideo();
+                    }
+                    if (currentGearId > 0 && (aState === YT.PlayerState.PAUSED || aState === YT.PlayerState.UNSTARTED)) {
+                        audioPlayer.playVideo();
+                    }
+
+                    // 當在 N 檔時 (1.0x)，避免音頻輕微漂移
+                    if (currentGearId === 5 && vState === YT.PlayerState.PLAYING) {
+                        const vpTime = visualPlayer.getCurrentTime();
+                        const apTime = audioPlayer.getCurrentTime();
+                        if (Math.abs(vpTime - apTime) > 1.5) {
+                            audioPlayer.seekTo(vpTime, true);
+                        }
+                    }
+                }
+                updateSpeedometer();
+            }, 200);
+        }
+
+        // === Speedometer ===
+        let displaySpeed = 0;
+        function updateSpeedometer() {
+            if (isPaused) { speedValue.textContent = "0"; return; }
+
+            // 透過實際播放速率換算出現在的視覺速度
+            const targetRate = GEARS[currentGearId].rate;
+            const targetSpeed = targetRate * 85;
+
+            // 平滑時速轉換，煞車(B檔)減速曲線更明顯
+            let approachRatio = 0.05;
+            if (currentGearId === 0) approachRatio = 0.15;
+            if (currentGearId > 5) approachRatio = 0.02;
+
+            displaySpeed += (targetSpeed - displaySpeed) * approachRatio;
+
+            // 1. 月台廣播音效觸發 (< 10km/h 且煞車進站中)
+            if (displaySpeed <= 10 && displaySpeed > 1 && currentGearId < 5 && !audio10kmhPlayed) {
+                audio10kmhPlayed = true;
+                platformAnnounceAudio.play().catch(e => console.log('Audio error:', e));
+            }
+            if (displaySpeed > 10) {
+                audio10kmhPlayed = false;
+                if (!pGearLocked) stationStateActive = false;
+            }
+
+            // 2. 完美的 0 km/h 停止並觸發【停車判定】與【StationState】
+            if (currentGearId === 0 && displaySpeed < 1.0) {
+                if (displaySpeed > 0 && !isStoppedState) {
+                    triggerStopEvaluation();
+
+                    // 進入車站狀態：觸發門音效 & 鎖定 P 檔輸出
+                    stationStateActive = true;
+                    pGearLocked = true;
+
+                    // 背景化原先的車廂音稍作迴避，播放門開啟音效
+                    audioPlayer.setVolume(30);
+                    doorOpenAudio.play().catch(e => console.log(e));
+
+                    // 模擬自動發車條件：10秒後關門，再 3秒後解鎖
+                    setTimeout(() => {
+                        doorCloseAudio.play().catch(e => console.log(e));
+                        setTimeout(() => {
+                            pGearLocked = false;
+                            audioPlayer.setVolume(100); // 恢復視聽音量
+                            const ratingPanel = document.getElementById('stop-rating');
+                            if (ratingPanel) ratingPanel.textContent += " (車門已閉，可發車)";
+                        }, 3000);
+                    }, 10000);
+                }
+                displaySpeed = 0;
+            }
+
+            // 3. 視覺與聲音同步修復 (平滑過渡動感)
+            let visualRate = displaySpeed / 85;
+            if (stationStateActive && displaySpeed === 0) {
+                visualRate = 0.1; // StationState: 0.1x 極慢速模擬微震，不暫停
+            } else if (currentGearId < 5 && displaySpeed > 0) {
+                visualRate = Math.max(0.4, visualRate); // 進站減速曲線：最低保底倍率 0.4x 保留動感
+            } else {
+                visualRate = Math.max(0.1, visualRate); // 最低避免 error
+            }
+
+            let roundedRate = Math.round(visualRate * 100) / 100;
+            if (visualPlayer && visualPlayer.setPlaybackRate) {
+                if (Math.abs(roundedRate - lastSetRate) > 0.05 || stationStateActive) {
+                    try {
+                        visualPlayer.setPlaybackRate(roundedRate);
+                        lastSetRate = roundedRate;
+                    } catch (e) { }
+                }
+            }
+
+            speedValue.textContent = Math.round(displaySpeed);
+        }
+
+        // 停車判定結算系統
+        function triggerStopEvaluation() {
+            isStoppedState = true;
+            const ratingPanel = document.getElementById('stop-rating');
+
+            let message = "停車判定：良好 Good";
+            let color = "#00ffcc";
+
+            if (brakeScore >= 90) {
+                message = "停車判定：完美 Perfect!";
+                color = "gold";
+            } else if (brakeScore <= 50) {
+                message = "停車判定：急煞扣分 Bad";
+                color = "#ff3333";
+            }
+
+            ratingPanel.textContent = message;
+            ratingPanel.style.color = color;
+            ratingPanel.style.textShadow = `0 0 20px ${color}`;
+
+            ratingPanel.style.display = 'block';
+            ratingPanel.classList.remove('rating-anim');
+            void ratingPanel.offsetWidth; // trigger reflow
+            ratingPanel.classList.add('rating-anim');
+        }
+
+
+        // === Mascon Interaction ===
+        let isDragging = false;
+        function renderGearLabels() {
+            const container = document.getElementById('gear-labels');
+            container.innerHTML = '';
+            [...GEARS].reverse().forEach((gear, idx) => {
+                const label = document.createElement('div');
+                label.className = 'gear-label';
+                label.textContent = gear.name;
+                if (gear.name === 'N') { label.style.color = '#fff'; label.style.fontSize = '14px'; }
+                if (gear.name === 'EB') label.style.color = '#ff3333';
+                label.style.position = 'absolute';
+                label.style.top = `${(idx / (GEARS.length - 1)) * 100}%`;
+                container.appendChild(label);
+            });
+        }
+        renderGearLabels();
+
+        function updateMasconUI() {
+            const gear = GEARS[currentGearId];
+            const maxIdx = GEARS.length - 1;
+            const percentage = ((maxIdx - currentGearId) / maxIdx) * 100;
+
+            handle.style.top = `${percentage}%`;
+            handle.textContent = gear.name;
+            handle.style.borderColor = gear.name === 'EB' ? '#ff3333' : '#fff';
+            gearDisplay.textContent = gear.name;
+            gearDisplay.className = `gear-text-indicator ${gear.class}`;
+        }
+
+        function applyGearEffect(gearId) {
+            let previousGear = currentGearId;
+            currentGearId = gearId;
+
+            // 【評分邏輯紀錄】: 監測有無「退檔過快」的行為造成急煞
+            if (gearId < previousGear) {
+                let dropAmount = previousGear - gearId;
+                if (dropAmount >= 4) {
+                    brakeScore -= 30; // 瞬間降太多檔位大扣分
+                } else if (dropAmount >= 2) {
+                    brakeScore -= 10;
+                }
+            }
+
+            // 【重置狀態】: 只要往前推到 P 以上，就算重新發車
+            if (gearId > 5 && isStoppedState && !pGearLocked) {
+                isStoppedState = false;
+                brakeScore = 100;
+                document.getElementById('stop-rating').style.display = 'none';
+                stationStateActive = false;
+            } else if (gearId > 0 && isStoppedState && !pGearLocked) {
+                // 退回 N 檔或 B 檔等緩解煞車時
+                isStoppedState = false;
+                brakeScore = 100;
+                document.getElementById('stop-rating').style.display = 'none';
+            }
+
+            updateMasconUI();
+
+            if (!visualPlayer || !audioPlayer) return;
+            const gear = GEARS[gearId];
+
+            if (visualPlayer.getPlayerState() !== YT.PlayerState.PLAYING && visualPlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                // 不再於 0km/h 或 EB 時自動暫停，維持影片播放（由 updateSpeedometer 的 StationState 控制 0.1x）
+                visualPlayer.playVideo();
+            }
+            if (audioPlayer.getPlayerState() !== YT.PlayerState.PLAYING && audioPlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                audioPlayer.playVideo();
+            }
+
+            // playbackRate 現在交由 updateSpeedometer 負責平滑變速過渡，不再在此出現跳變
+
+            // 【重新對齊音效】
+            // 由於煞車時(B1-B4)我們的視覺播放速度在0.2~0.8，但音訊會保持 1.0 (為了聲音不走調、不斷訊)
+            // 所以只要我們回到 N 檔 (1.0x)，我們就幫它們做一次性同步，確保後面的畫面完美對上！
+            if (gear.id === 5) {
+                const vt = visualPlayer.getCurrentTime();
+                audioPlayer.seekTo(vt, true);
+            }
+        }
+
+        // Pointer Events Setup
+        track.addEventListener('pointerdown', handlePointerDown);
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+
+        function handlePointerDown(e) { isDragging = true; handlePointerMove(e); }
+        function handlePointerMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const rect = track.getBoundingClientRect();
+            let percentage = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+            let newGearIdx = (GEARS.length - 1) - Math.round(percentage * (GEARS.length - 1));
+
+            if (pGearLocked && newGearIdx > 5) {
+                newGearIdx = 5; // Lock to N
+                const ratingPanel = document.getElementById('stop-rating');
+                if (ratingPanel.style.display !== 'none') {
+                    ratingPanel.textContent = "車門未關，發車鎖定中！(P-Gear Locked)";
+                    ratingPanel.style.color = "#ff9933";
+                }
+            }
+
+            if (newGearIdx !== currentGearId) {
+                if (navigator.vibrate) navigator.vibrate(20);
+                applyGearEffect(newGearIdx);
+            }
+        }
+        function handlePointerUp() { isDragging = false; }
+
+        // === Keyboard Support ===
+        window.addEventListener('keydown', (e) => {
+            if (isSeeking || isPaused || !isStarted) return;
+            if (e.target.tagName.toLowerCase() === 'input') return;
+
+            let newIdx = currentGearId;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                newIdx = Math.min(newIdx + 1, GEARS.length - 1);
+            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                newIdx = Math.max(newIdx - 1, 0);
+            }
+
+            if (pGearLocked && newIdx > 5) {
+                newIdx = 5; // Lock to N
+                const ratingPanel = document.getElementById('stop-rating');
+                if (ratingPanel.style.display !== 'none') {
+                    ratingPanel.textContent = "車門未關，發車鎖定中！(P-Gear Locked)";
+                    ratingPanel.style.color = "#ff9933";
+                }
+            }
+
+            if (newIdx !== currentGearId) applyGearEffect(newIdx);
+        });
+
+        // === Side Panel Controls ===
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => { alert("無法切換全螢幕"); });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
+        document.getElementById('btn-seek-bw').addEventListener('click', () => {
+            if (!visualPlayer) return;
+            isSeeking = true;
+            const target = Math.max(0, visualPlayer.getCurrentTime() - 60);
+            visualPlayer.seekTo(target, true); audioPlayer.seekTo(target, true);
+            setTimeout(() => isSeeking = false, 500);
+        });
+
+        document.getElementById('btn-seek-fw').addEventListener('click', () => {
+            if (!visualPlayer) return;
+            isSeeking = true;
+            const target = visualPlayer.getCurrentTime() + 60;
+            visualPlayer.seekTo(target, true); audioPlayer.seekTo(target, true);
+            setTimeout(() => isSeeking = false, 500);
+        });
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            if (!visualPlayer) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                visualPlayer.pauseVideo(); audioPlayer.pauseVideo();
+                document.getElementById('btn-pause').style.background = 'rgba(255,100,100,0.8)';
+            } else {
+                visualPlayer.playVideo(); audioPlayer.playVideo();
+                document.getElementById('btn-pause').style.background = 'rgba(0,0,0,0.6)';
+                audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
+            }
+        });
+
+        document.getElementById('btn-change-video').addEventListener('click', () => {
+            const sel = document.getElementById('video-selector');
+            sel.style.display = sel.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        document.getElementById('btn-load-video').addEventListener('click', () => {
+            let input = document.getElementById('video-input').value.trim();
+            if (input && visualPlayer) {
+                const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+                const match = input.match(regex);
+                if (match && match[1]) input = match[1];
+
+                currentVideoId = input;
+                visualPlayer.loadVideoById({ videoId: currentVideoId });
+                audioPlayer.loadVideoById({ videoId: currentVideoId });
+
+                applyGearEffect(0);
+                document.getElementById('video-selector').style.display = 'none';
+                displaySpeed = 0;
+            }
+        });
+
+        document.getElementById('btn-unmute').addEventListener('click', () => {
+            if (audioPlayer) {
+                audioPlayer.unMute(); audioPlayer.setVolume(100);
+                document.getElementById('btn-unmute').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
