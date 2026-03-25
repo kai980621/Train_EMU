@@ -608,6 +608,8 @@
         let isStarted = false;
         let isPaused = false;
         let isSeeking = false;
+        let doorTimer = null; // 用於門關閉後 3 秒自動暫停的計時器
+        let isAutoPaused = false; // 是否在車站等候發車的自動暫停狀態
 
         let currentVideoId = 'TpxTlO68CWI';
 
@@ -755,7 +757,7 @@
         function startSyncEngine() {
             if (syncCheckInterval) clearInterval(syncCheckInterval);
             syncCheckInterval = setInterval(() => {
-                if (!isStarted || isPaused || isSeeking) return;
+                if (!isStarted || isPaused || isSeeking || isAutoPaused) return;
 
                 if (visualPlayer.getPlayerState && audioPlayer.getPlayerState) {
                     const vState = visualPlayer.getPlayerState();
@@ -808,12 +810,12 @@
             if (currentSpeed < 0.1) currentSpeed = 0;
             currentSpeed = Math.max(0, Math.min(100, currentSpeed));
 
-            // 調整畫面播放速率 (僅 Visual 變速，Audio 永遠維持 1.0 以確保音訊流暢)
+            // 調整畫面播放速率 (從 0.5x 開始，每 10km/h 提升 0.25)
             if (visualPlayer && visualPlayer.setPlaybackRate) {
-                let visualRate = 1.0 + (currentSpeed / 33.33);
-                visualRate = Math.max(1.0, Math.min(2.0, visualRate));
+                let visualRate = 0.5 + (currentSpeed * 0.025); 
+                visualRate = Math.max(0.5, Math.min(2.0, visualRate));
 
-                let roundedRate = Math.round(visualRate * 10) / 10; // 降低頻率
+                let roundedRate = Math.round(visualRate * 10) / 10; 
                 if (Math.abs(roundedRate - lastSetRate) >= 0.1) {
                     try {
                         visualPlayer.setPlaybackRate(roundedRate);
@@ -858,6 +860,14 @@
         function applyGearEffect(gearId) {
             currentGearId = gearId;
             updateMasconUI();
+
+            // 若使用者拉動把手至動力檔 (P1-P5)，解除自動暫停
+            if (currentGearId > 5 && isAutoPaused) {
+                isAutoPaused = false;
+                visualPlayer.playVideo();
+                audioPlayer.playVideo();
+                updateTicker("🟢 動力解鎖：開始加速發車。");
+            }
         }
 
         // Pointer Events 
@@ -897,7 +907,18 @@
                     lamp.className = "status-lamp active";
                     lamp.textContent = "READY / DOOR CLOSED";
                 }
-                updateTicker("🟢 車門已關閉。可以加壓發車 [Z]。下段廣播預備：發車 [Space]");
+                updateTicker("🟢 車門已關閉。可以加壓發車 [Z]。");
+
+                // 新增：門關閉後 3 秒自動暫停影片
+                if (doorTimer) clearTimeout(doorTimer);
+                doorTimer = setTimeout(() => {
+                    if (currentSpeed === 0 && !pGearLocked && isStarted) {
+                        isAutoPaused = true;
+                        visualPlayer.pauseVideo();
+                        audioPlayer.pauseVideo();
+                        updateTicker("💡 列車待避中。請拉動動力把手發車 [Z]。");
+                    }
+                }, 3000);
                 return;
             }
 
