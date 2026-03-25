@@ -523,11 +523,11 @@
             { id: 3, name: 'B2', class: 'gear-B', decel: 5.0 },
             { id: 4, name: 'B1', class: 'gear-B', decel: 2.0 },
             { id: 5, name: 'N', class: 'gear-N', accel: 0, decel: 0.5 },
-            { id: 6, name: 'P1', class: 'gear-P', accel: 1.1 },
-            { id: 7, name: 'P2', class: 'gear-P', accel: 1.25 },
-            { id: 8, name: 'P3', class: 'gear-P', accel: 1.5 },
-            { id: 9, name: 'P4', class: 'gear-P', accel: 2.0 },
-            { id: 10, name: 'P5', class: 'gear-P', accel: 3.0 }
+            { id: 6, name: 'P1', class: 'gear-P', accel: 5.0 },
+            { id: 7, name: 'P2', class: 'gear-P', accel: 7.5 },
+            { id: 8, name: 'P3', class: 'gear-P', accel: 10.0 },
+            { id: 9, name: 'P4', class: 'gear-P', accel: 15.0 },
+            { id: 10, name: 'P5', class: 'gear-P', accel: 20.0 }
         ];
 
         const announceTexts = ["發車廣播播放中...", "下一站預告播放中...", "即將抵達站播放中..."];
@@ -635,13 +635,11 @@
                     const vState = visualPlayer.getPlayerState();
                     const aState = audioPlayer.getPlayerState();
 
-                    // 門關閉(!pGearLocked)且時速為0時暫停影片，其餘狀態(門開或行進中)維持播放
-                    if (currentSpeed === 0 && !pGearLocked) {
-                        if (vState === YT.PlayerState.PLAYING) visualPlayer.pauseVideo();
-                        if (aState === YT.PlayerState.PLAYING) audioPlayer.pauseVideo();
-                    } else {
-                        if (vState === YT.PlayerState.PAUSED || vState === YT.PlayerState.UNSTARTED) visualPlayer.playVideo();
-                        if (aState === YT.PlayerState.PAUSED || aState === YT.PlayerState.UNSTARTED) audioPlayer.playVideo();
+                    if (vState === YT.PlayerState.PAUSED || vState === YT.PlayerState.UNSTARTED) {
+                        visualPlayer.playVideo();
+                    }
+                    if (aState === YT.PlayerState.PAUSED || aState === YT.PlayerState.UNSTARTED) {
+                        audioPlayer.playVideo();
                     }
 
                     if (currentGearId === 5 && vState === YT.PlayerState.PLAYING) {
@@ -723,7 +721,12 @@
             console.log(`[Gear Update] Changed to ${GEARS[currentGearId].name}`);
 
             if (!visualPlayer || !audioPlayer) return;
-            // play/pause state is managed by startSyncEngine
+            if (visualPlayer.getPlayerState() !== YT.PlayerState.PLAYING && visualPlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                visualPlayer.playVideo();
+            }
+            if (audioPlayer.getPlayerState() !== YT.PlayerState.PLAYING && audioPlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                audioPlayer.playVideo();
+            }
         }
 
         // Pointer Events Setup
