@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tokyo East Simulator 6.0</title>
+    <title>鐵道模擬駕駛器</title>
     <style>
         @keyframes ticker {
             0% {
@@ -405,72 +405,6 @@
         .gear-P {
             color: #33ccff;
         }
-
-        /* Mobile Controls */
-        #mobile-controls-container {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            padding: 12px;
-            width: auto;
-        }
-
-        .mobile-row {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-start;
-        }
-
-        .mobile-btn {
-            flex: 1;
-            height: 48px;
-            min-width: 65px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: transform 0.1s;
-            cursor: pointer;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .mobile-btn:active {
-            transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.25);
-        }
-
-        .mobile-btn span {
-            font-size: 16px;
-            margin-bottom: 1px;
-        }
-
-        @media screen and (max-width: 1024px) {
-            #mobile-controls-container {
-                display: flex;
-            }
-
-            #left-panel {
-                display: none;
-            }
-
-            #speedometer {
-                right: 150px;
-                bottom: 20px;
-            }
-        }
     </style>
 </head>
 
@@ -562,39 +496,6 @@
                 <hr style="opacity: 0.2;">
                 <b>[Space]</b> 手動播音<br>
                 <b>[E]</b> 關門 / <b>[Q]</b> 開門
-            </div>
-        </div>
-
-        <!-- Mobile Controls Overlay -->
-        <div id="mobile-controls-container" class="glass-panel">
-            <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('KeyQ')"><span>🚪</span>開門 (Q)</div>
-                <div class="mobile-btn" onclick="handleAction('KeyE')"><span>🔒</span>關門 (E)</div>
-                <div class="mobile-btn" onclick="handleAction('Space')"><span>📢</span>播音 (Spc)</div>
-            </div>
-            <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('KeyZ')" style="border-color: rgba(51, 204, 255, 0.4);">
-                    <span>⏫</span>加速 (Z)
-                </div>
-                <div class="mobile-btn" onclick="handleAction('KeyA')"><span>⏸</span>空檔 (A)</div>
-                <div class="mobile-btn" onclick="handleAction('KeyS')" style="border-color: rgba(255, 153, 51, 0.4);">
-                    <span>⏬</span>減速 (S)
-                </div>
-            </div>
-            <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('ArrowUp')"><span>🔼</span>微加 (↑)</div>
-                <div class="mobile-btn" onclick="handleAction('ArrowDown')"><span>🔽</span>微減 (↓)</div>
-                <div class="mobile-btn" id="mobile-btn-pause"><span>⏸</span>暫停 (P)</div>
-            </div>
-            <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('KeyX')"><span>🔇</span>同步Off</div>
-                <div class="mobile-btn" onclick="handleAction('KeyW')"><span>🔗</span>同步On</div>
-                <div class="mobile-btn" id="mobile-btn-sync"><span>🔄</span>重整</div>
-            </div>
-            <div class="mobile-row">
-                <div class="mobile-btn" id="mobile-btn-fullscreen"><span>⛶</span>全屏</div>
-                <div class="mobile-btn" id="mobile-btn-video"><span>🎞</span>影片</div>
-                <div class="mobile-btn" onclick="document.getElementById('help-btn').click()"><span>❓</span>幫助</div>
             </div>
         </div>
     </div>
@@ -884,13 +785,15 @@
         }
         function handlePointerUp() { isDragging = false; }
 
-        function handleAction(code) {
+        // === Keyboard Support ===
+        window.addEventListener('keydown', (e) => {
             if (isSeeking || isPaused || !isStarted) return;
+            if (e.target.tagName.toLowerCase() === 'input') return;
 
             let newIdx = currentGearId;
             const lamp = getDoorLamp();
 
-            if (code === 'KeyE' && currentSpeed === 0) {
+            if (e.code === 'KeyE' && currentSpeed === 0) {
                 doorCloseAudio.play().catch(() => { });
                 pGearLocked = false;
                 if (lamp) {
@@ -901,7 +804,7 @@
                 return;
             }
 
-            if (code === 'KeyQ' && currentSpeed === 0) {
+            if (e.code === 'KeyQ' && currentSpeed === 0) {
                 doorOpenAudio.play().catch(() => { });
                 pGearLocked = true;
                 if (lamp) {
@@ -913,7 +816,7 @@
                 return;
             }
 
-            if (code === 'Space') {
+            if (e.code === 'Space') {
                 if (isAnnouncePlaying) return;
                 isAnnouncePlaying = true;
                 updateTicker(`📢 播音中：${announceTexts[announceStep]}`);
@@ -930,7 +833,7 @@
                 return;
             }
 
-            if (code === 'KeyZ') {
+            if (e.code === 'KeyZ') {
                 // Z 鍵加速邏輯：跳過 N 檔 (索引 5)
                 if (newIdx < 4) newIdx++;
                 else if (newIdx === 4 || newIdx === 5) newIdx = 6; // 直接跳到 P1
@@ -940,27 +843,27 @@
                     newIdx = 5;
                     updateTicker("⚠️ 發車鎖定中！請先按 E 關門。");
                 }
-            } else if (code === 'KeyS') {
+            } else if (e.code === 'KeyS') {
                 // S 鍵減速邏輯：跳過 N 檔 (索引 5)
                 if (newIdx > 6) newIdx--;
                 else if (newIdx === 6 || newIdx === 5) newIdx = 4; // 直接從 P1 跳到 B1
                 else if (newIdx > 0) newIdx--; // 原本就在 B 檔則繼續減
-            } else if (code === 'KeyA') {
+            } else if (e.code === 'KeyA') {
                 // A 鍵：直跳 N 檔
                 newIdx = 5;
-            } else if (code === 'ArrowDown') {
+            } else if (e.code === 'ArrowDown') {
                 if (newIdx > 5) newIdx = 5;
                 else if (newIdx > 0) newIdx--;
-            } else if (code === 'ArrowUp') {
+            } else if (e.code === 'ArrowUp') {
                 if (newIdx < 5) newIdx++;
                 else newIdx = 5;
-            } else if (code === 'KeyX') {
+            } else if (e.code === 'KeyX') {
                 // X 鍵：切換至「影片內廣播中」模式，關閉同步
                 isManualSyncMode = false;
                 updateTicker("🔇 偵測到影片內廣播：已暫時關閉 A/V 同步。");
                 const si = document.getElementById('sync-indicator');
                 if (si) { si.textContent = "OFF (廣播中)"; si.style.color = "#ff3333"; }
-            } else if (code === 'KeyW') {
+            } else if (e.code === 'KeyW') {
                 // W 鍵：恢復同步模式
                 isManualSyncMode = true;
                 updateTicker("🔗 偵測到音效流動：已恢復 A/V 同步功能。");
@@ -969,12 +872,6 @@
             }
 
             if (newIdx !== currentGearId) applyGearEffect(newIdx);
-        }
-
-        // === Keyboard Support ===
-        window.addEventListener('keydown', (e) => {
-            if (e.target.tagName.toLowerCase() === 'input') return;
-            handleAction(e.code);
         });
 
         // === Side Panel Controls ===
@@ -1053,46 +950,6 @@
                 helpBtn.style.background = isHidden ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 150, 255, 0.6)';
             });
         }
-        // Mobile specific listeners
-        const mobilePause = document.getElementById('mobile-btn-pause');
-        const mobileFullscreen = document.getElementById('mobile-btn-fullscreen');
-        const mobileVideo = document.getElementById('mobile-btn-video');
-        const mobileSync = document.getElementById('mobile-btn-sync');
-
-        if (mobilePause) {
-            mobilePause.addEventListener('click', () => {
-                document.getElementById('btn-pause').click();
-                if (navigator.vibrate) navigator.vibrate(30);
-            });
-        }
-        if (mobileFullscreen) {
-            mobileFullscreen.addEventListener('click', () => {
-                document.getElementById('btn-fullscreen').click();
-                if (navigator.vibrate) navigator.vibrate(30);
-            });
-        }
-        if (mobileVideo) {
-            mobileVideo.addEventListener('click', () => {
-                document.getElementById('btn-change-video').click();
-                if (navigator.vibrate) navigator.vibrate(30);
-            });
-        }
-        if (mobileSync) {
-            mobileSync.addEventListener('click', () => {
-                if (visualPlayer && audioPlayer) {
-                    audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
-                    updateTicker("🔄 手動同步核心中...");
-                    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-                }
-            });
-        }
-
-        // Add vibration to all mobile buttons
-        document.querySelectorAll('.mobile-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (navigator.vibrate) navigator.vibrate(20);
-            });
-        });
     </script>
 </body>
 

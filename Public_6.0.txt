@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tokyo East Simulator 6.0</title>
+    <title>鐵道模擬駕駛器</title>
     <style>
         @keyframes ticker {
             0% {
@@ -573,13 +573,9 @@
                 <div class="mobile-btn" onclick="handleAction('Space')"><span>📢</span>播音 (Spc)</div>
             </div>
             <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('KeyZ')" style="border-color: rgba(51, 204, 255, 0.4);">
-                    <span>⏫</span>加速 (Z)
-                </div>
+                <div class="mobile-btn" onclick="handleAction('KeyZ')" style="border-color: rgba(51, 204, 255, 0.4);"><span>⏫</span>加速 (Z)</div>
                 <div class="mobile-btn" onclick="handleAction('KeyA')"><span>⏸</span>空檔 (A)</div>
-                <div class="mobile-btn" onclick="handleAction('KeyS')" style="border-color: rgba(255, 153, 51, 0.4);">
-                    <span>⏬</span>減速 (S)
-                </div>
+                <div class="mobile-btn" onclick="handleAction('KeyS')" style="border-color: rgba(255, 153, 51, 0.4);"><span>⏬</span>減速 (S)</div>
             </div>
             <div class="mobile-row">
                 <div class="mobile-btn" onclick="handleAction('ArrowUp')"><span>🔼</span>微加 (↑)</div>
