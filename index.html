@@ -166,6 +166,8 @@
             z-index: 10;
             opacity: 0.3;
             transition: opacity 0.3s;
+            transform: translateY(-50%) scale(0.85);
+            transform-origin: left center;
         }
 
         #left-panel:hover {
@@ -200,13 +202,14 @@
         #speedometer {
             position: absolute;
             bottom: 20px;
-            right: 160px;
-            padding: 15px 30px;
+            right: 140px;
+            padding: 10px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             z-index: 10;
             pointer-events: none;
+            transform: scale(0.8);
         }
 
         #speed-value {
@@ -315,16 +318,18 @@
             right: 20px;
             top: 20px;
             bottom: 20px;
-            width: 120px;
+            width: 90px;
             z-index: 10;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 0;
+            padding: 15px 0;
             box-sizing: border-box;
             touch-action: none;
             opacity: 0.8;
             transition: opacity 0.3s;
+            transform: scale(0.8);
+            transform-origin: right center;
         }
 
         #mascon-container:hover {
@@ -358,7 +363,8 @@
             font-weight: bold;
             font-size: 18px;
             transform: translateY(-50%);
-            transition: transform 0.05s;
+            top: 50%;
+            transition: transform 0.05s, top 0.2s;
             pointer-events: none;
         }
 
@@ -417,6 +423,8 @@
             gap: 8px;
             padding: 12px;
             width: auto;
+            transform: scale(0.85);
+            transform-origin: left bottom;
         }
 
         .mobile-row {
@@ -524,6 +532,18 @@
         <div id="video-selector" class="glass-panel">
             <div style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">更換 YouTube 影片</div>
             <input type="text" id="video-input" placeholder="可直接貼上 YouTube 網址" value="">
+            <div style="font-weight: bold; margin-top: 10px; margin-bottom: 8px; font-size: 14px;">影片畫質 (Quality)</div>
+            <select id="quality-selector" class="top-btn"
+                style="width: 100%; background: rgba(0,0,0,0.6); margin-bottom: 10px; height: auto; text-align: left;">
+                <option value="default">自動 (Default)</option>
+                <option value="hd2160">4K (2160p)</option>
+                <option value="hd1440">2K (1440p)</option>
+                <option value="hd1080">1080p</option>
+                <option value="hd720">720p</option>
+                <option value="large">480p</option>
+                <option value="medium">360p</option>
+                <option value="small">240p</option>
+            </select>
             <button id="btn-load-video" class="top-btn"
                 style="background: rgba(0, 150, 255, 0.6); width: 100%; margin-top: 5px;">確認載入</button>
         </div>
@@ -540,7 +560,7 @@
                 <div class="gear-label-container" id="gear-labels">
                     <!-- Labels added by JS -->
                 </div>
-                <div id="mascon-handle">EB</div>
+                <div id="mascon-handle">N</div>
             </div>
             <div style="font-size: 12px; opacity: 0.5;">MASCON</div>
         </div>
@@ -554,14 +574,15 @@
             <h3 style="margin-top: 0; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">駕駛操作說明</h3>
             <div>A/V 同步狀態: <span id="sync-indicator" style="color: #33ff33; font-weight: bold;">ON</span></div>
             <div style="margin-top: 10px;">
-                <b>[Z]</b> 加速 / <b>[S]</b> 減速 (皆跳過 N)<br>
-                <b>[A]</b> 進入 N 檔 (A/V 同步點)<br>
+                <b>[Z]</b> 切換到 P1 / <b>[S]</b> 切換到 B1<br>
+                <b>[↑][↓]</b> 一格一格調整 (跳過 N)<br>
+                <b>[A]</b> 進入 N 檔<br>
                 <hr style="opacity: 0.2;">
-                <b>[X]</b> 影片廣播中 <span style="color: #ffaa00;">(關閉同步)</span><br>
-                <b>[W]</b> 廣播已結束 <span style="color: #33ff33;">(恢復同步)</span><br>
+                <b>[X]</b> 手動同步音畫<br>
+                <b>[W]</b> 關閉/暫停同步模式<br>
                 <hr style="opacity: 0.2;">
                 <b>[Space]</b> 手動播音<br>
-                <b>[E]</b> 關門 / <b>[Q]</b> 開門
+                <b>[E]</b> 關門 / <b>[Q]</b> 開門 (自動同步)
             </div>
         </div>
 
@@ -587,9 +608,9 @@
                 <div class="mobile-btn" id="mobile-btn-pause"><span>⏸</span>暫停 (P)</div>
             </div>
             <div class="mobile-row">
-                <div class="mobile-btn" onclick="handleAction('KeyX')"><span>🔇</span>同步Off</div>
-                <div class="mobile-btn" onclick="handleAction('KeyW')"><span>🔗</span>同步On</div>
-                <div class="mobile-btn" id="mobile-btn-sync"><span>🔄</span>重整</div>
+                <div class="mobile-btn" onclick="handleAction('KeyX')"><span>🔄</span>手動同步</div>
+                <div class="mobile-btn" onclick="handleAction('KeyW')"><span>🚫</span>關閉同步</div>
+                <div class="mobile-btn" id="mobile-btn-sync"><span>♻️</span>硬性重整</div>
             </div>
             <div class="mobile-row">
                 <div class="mobile-btn" id="mobile-btn-fullscreen"><span>⛶</span>全屏</div>
@@ -633,10 +654,9 @@
         // === Sync Engine ===
         let syncCheckInterval = null;
         let lastSetRate = -1;
+        let isSyncingNow = false;
+        let isSyncEnabled = true;
 
-        // 重新恢復「真正操控播放速率」的真實駕駛感
-        // 將不同檔位嚴格對應 YouTube 容許的倍速，帶來純粹的加速、減速回饋！
-        // 同時修復斷音問題，秘訣在於：只有畫面(Visual)會變速，音效(Audio)始終維持在 1.0 播報播音！
         const GEARS = [
             { id: 0, name: 'EB', class: 'gear-EB', decel: 30.0 },
             { id: 1, name: 'B4', class: 'gear-B', decel: 15.0 },
@@ -652,29 +672,9 @@
         ];
 
         const announceTexts = ["發車廣播播放中...", "下一站預告播放中...", "即將抵達站播放中..."];
-        let tickerEl = null;
-        let doorLamp = null;
-
-        function updateTicker(msg) {
-            if (!tickerEl) tickerEl = document.getElementById('ticker-text');
-            if (tickerEl) {
-                tickerEl.textContent = msg;
-                tickerEl.style.animation = 'none';
-                tickerEl.offsetHeight; /* trigger reflow */
-                tickerEl.style.animation = 'ticker 15s linear infinite';
-            }
-        }
-
-        function getDoorLamp() {
-            if (!doorLamp) doorLamp = document.getElementById('door-lamp');
-            return doorLamp;
-        }
-
-        let currentGearId = 0; // Starts with EB (0.0x / Paused)
-
-        // 停車判定系統相關狀態
-        let brakeScore = 100;
-        let isStoppedState = true;
+        let tickerEl = null; let doorLamp = null;
+        let currentGearId = 5; // 初始化為 N 檔
+        let brakeScore = 100; let isStoppedState = true;
 
         // DOM Elements
         const btnMasterStart = document.getElementById('btn-master-start');
@@ -684,6 +684,32 @@
         const track = document.getElementById('mascon-track');
         const gearDisplay = document.getElementById('gear-display');
         const speedValue = document.getElementById('speed-value');
+
+        function updateTicker(msg) {
+            if (!tickerEl) tickerEl = document.getElementById('ticker-text');
+            if (tickerEl) {
+                tickerEl.textContent = msg;
+                tickerEl.style.animation = 'none';
+                tickerEl.offsetHeight;
+                tickerEl.style.animation = 'ticker 15s linear infinite';
+            }
+        }
+
+        function getDoorLamp() {
+            if (!doorLamp) doorLamp = document.getElementById('door-lamp');
+            return doorLamp;
+        }
+
+        function syncPlayers(silent = false) {
+            if (!isStarted || !visualPlayer || !audioPlayer) return;
+            if (!isSyncEnabled && !silent) {
+                updateTicker("⚠️ 同步功能已關閉 (W)，請按 X 手動或重新開啟。");
+                return;
+            }
+            const vpTime = visualPlayer.getCurrentTime();
+            audioPlayer.seekTo(vpTime, true);
+            if (!silent) updateTicker("🔄 A/V 同步校正完成。");
+        }
 
         // === YouTube API Initialization ===
         function onYouTubeIframeAPIReady() {
@@ -722,9 +748,9 @@
                 appContainer.style.display = 'block';
                 isStarted = true;
 
+                updateMasconUI();
                 applyGearEffect(currentGearId);
                 startSyncEngine();
-
             }
         }
 
@@ -735,9 +761,6 @@
             if (event.data === YT.PlayerState.ENDED) {
                 visualPlayer.seekTo(0); audioPlayer.seekTo(0);
             }
-            if (event.data === YT.PlayerState.PLAYING && visualPlayer.setPlaybackQuality) {
-                visualPlayer.setPlaybackQuality('hd1080');
-            }
         }
 
         btnMasterStart.addEventListener('click', () => {
@@ -746,13 +769,6 @@
             createPlayers();
             setTimeout(() => { document.getElementById('btn-unmute').style.display = 'block'; }, 4000);
         });
-
-        // === 優化後的同步引擎與物理引擎 ===
-
-        // 新增一個全局變數防止頻繁同步
-        // 1. 同步引擎狀態
-        let isSyncingNow = false;
-        let isManualSyncMode = true; // 是否允許在 N 檔進行音畫同步 (可以用 X/W 切換)
 
         function startSyncEngine() {
             if (syncCheckInterval) clearInterval(syncCheckInterval);
@@ -771,22 +787,7 @@
                         audioPlayer.playVideo();
                     }
 
-                    // 2. 修正 N 檔卡頓邏輯：增加手動同步開關檢查 (isManualSyncMode)
-                    if (currentGearId === 5 && isManualSyncMode && vState === YT.PlayerState.PLAYING && !isSyncingNow) {
-                        const vpTime = visualPlayer.getCurrentTime();
-                        const apTime = audioPlayer.getCurrentTime();
-                        const drift = Math.abs(vpTime - apTime);
-
-                        // 容差提高到 3.0 秒。網路影片極難完全同步，不要追得太緊才不會「口吃」。
-                        if (drift > 5.0) {
-                            console.log("[Sync] 正在校正音訊漂移: " + drift + "s");
-                            isSyncingNow = true;
-                            audioPlayer.seekTo(vpTime, true);
-
-                            // 校正後進入 3 秒冷卻時間，期間不再進行強制校正，避免卡頓循環
-                            setTimeout(() => { isSyncingNow = false; }, 3000);
-                        }
-                    }
+                    // 移除 N 檔自動同步邏輯 (已由用戶要求刪除)
                 }
                 updatePhysics();
             }, 200);
@@ -810,12 +811,17 @@
             if (currentSpeed < 0.1) currentSpeed = 0;
             currentSpeed = Math.max(0, Math.min(100, currentSpeed));
 
-            // 調整畫面播放速率 (從 0.5x 開始，每 10km/h 提升 0.25)
+            // 調整畫面播放速率 (若開門則 1.0x，否則隨速度變化從 0.5x 開始)
             if (visualPlayer && visualPlayer.setPlaybackRate) {
-                let visualRate = 0.5 + (currentSpeed * 0.025); 
+                let visualRate;
+                if (pGearLocked) {
+                    visualRate = 1.0; // 開門時正常播放
+                } else {
+                    visualRate = 0.5 + (currentSpeed * 0.025);
+                }
                 visualRate = Math.max(0.5, Math.min(2.0, visualRate));
 
-                let roundedRate = Math.round(visualRate * 10) / 10; 
+                let roundedRate = Math.round(visualRate * 10) / 10;
                 if (Math.abs(roundedRate - lastSetRate) >= 0.1) {
                     try {
                         visualPlayer.setPlaybackRate(roundedRate);
@@ -825,6 +831,18 @@
             }
 
             speedValue.textContent = Math.floor(currentSpeed);
+
+            // 優化：動態時速表發光顏色
+            if (currentGearId > 5) {
+                speedValue.style.color = "#33ccff"; // 動力: 水藍
+                speedValue.style.textShadow = "0 0 15px rgba(51, 204, 255, 0.8)";
+            } else if (currentGearId < 5) {
+                speedValue.style.color = "#ff9933"; // 軔機: 橘紅
+                speedValue.style.textShadow = "0 0 15px rgba(255, 153, 51, 0.8)";
+            } else {
+                speedValue.style.color = "#ffffff"; // N 檔: 白色
+                speedValue.style.textShadow = "none";
+            }
         }
 
         let isDragging = false;
@@ -858,7 +876,12 @@
         }
 
         function applyGearEffect(gearId) {
+            if (gearId === currentGearId) return;
             currentGearId = gearId;
+
+            // 優化：提供觸覺回饋
+            if (navigator.vibrate) navigator.vibrate(20);
+
             updateMasconUI();
 
             // 若使用者拉動把手至動力檔 (P1-P5)，解除自動暫停
@@ -888,7 +911,6 @@
             }
 
             if (newGearIdx !== currentGearId) {
-                if (navigator.vibrate) navigator.vibrate(20);
                 applyGearEffect(newGearIdx);
             }
         }
@@ -908,6 +930,7 @@
                     lamp.textContent = "READY / DOOR CLOSED";
                 }
                 updateTicker("🟢 車門已關閉。可以加壓發車 [Z]。");
+                syncPlayers(true); // 關門時自動同步
 
                 // 新增：門關閉後 3 秒自動暫停影片
                 if (doorTimer) clearTimeout(doorTimer);
@@ -931,6 +954,13 @@
                 }
                 updateTicker("門已開啟。動力系統鎖定中。");
                 if (currentGearId > 5) applyGearEffect(5);
+
+                // 修改：確保開門時影片維持播放不暫停
+                if (visualPlayer) visualPlayer.playVideo();
+                if (audioPlayer) audioPlayer.playVideo();
+                isAutoPaused = false;
+
+                syncPlayers(true); // 開門時自動同步
                 return;
             }
 
@@ -952,41 +982,48 @@
             }
 
             if (code === 'KeyZ') {
-                // Z 鍵加速邏輯：跳過 N 檔 (索引 5)
+                // Z 鍵：持續加速 (跳過 N)
+                if (currentGearId < 6) newIdx = 6; // EB~N -> P1
+                else if (currentGearId < 10) newIdx = currentGearId + 1; // P1~P4 -> 下一級
+
+                if (pGearLocked) {
+                    newIdx = 5;
+                    updateTicker("⚠️ 發車鎖定中！請先按 E 關門。");
+                }
+            } else if (code === 'KeyS') {
+                // S 鍵：持續減速/軔機 (跳過 N)
+                if (currentGearId > 4) newIdx = 4; // P~N -> B1
+                else if (currentGearId > 0) newIdx = currentGearId - 1; // B1~B4 -> 更強軔機/EB
+            } else if (code === 'KeyA') {
+                // A 鍵：直跳 N 檔
+                newIdx = 5;
+            } else if (code === 'ArrowUp') {
+                // 上方向鍵：一格一格加，跳過 N (5)
                 if (newIdx < 4) newIdx++;
-                else if (newIdx === 4 || newIdx === 5) newIdx = 6; // 直接跳到 P1
-                else if (newIdx < 10) newIdx++;
+                else if (newIdx === 4) newIdx = 6;
+                else if (newIdx >= 6 && newIdx < 10) newIdx++;
 
                 if (pGearLocked && newIdx > 5) {
                     newIdx = 5;
                     updateTicker("⚠️ 發車鎖定中！請先按 E 關門。");
                 }
-            } else if (code === 'KeyS') {
-                // S 鍵減速邏輯：跳過 N 檔 (索引 5)
-                if (newIdx > 6) newIdx--;
-                else if (newIdx === 6 || newIdx === 5) newIdx = 4; // 直接從 P1 跳到 B1
-                else if (newIdx > 0) newIdx--; // 原本就在 B 檔則繼續減
-            } else if (code === 'KeyA') {
-                // A 鍵：直跳 N 檔
-                newIdx = 5;
             } else if (code === 'ArrowDown') {
-                if (newIdx > 5) newIdx = 5;
-                else if (newIdx > 0) newIdx--;
-            } else if (code === 'ArrowUp') {
-                if (newIdx < 5) newIdx++;
-                else newIdx = 5;
+                // 下方向鍵：一格一格減，跳過 N (5)
+                if (newIdx > 6) newIdx--;
+                else if (newIdx === 6) newIdx = 4;
+                else if (newIdx <= 4 && newIdx > 0) newIdx--;
             } else if (code === 'KeyX') {
-                // X 鍵：切換至「影片內廣播中」模式，關閉同步
-                isManualSyncMode = false;
-                updateTicker("🔇 偵測到影片內廣播：已暫時關閉 A/V 同步。");
-                const si = document.getElementById('sync-indicator');
-                if (si) { si.textContent = "OFF (廣播中)"; si.style.color = "#ff3333"; }
-            } else if (code === 'KeyW') {
-                // W 鍵：恢復同步模式
-                isManualSyncMode = true;
-                updateTicker("🔗 偵測到音效流動：已恢復 A/V 同步功能。");
+                // X 鍵：重啟並執行手動同步
+                isSyncEnabled = true;
+                syncPlayers();
                 const si = document.getElementById('sync-indicator');
                 if (si) { si.textContent = "ON"; si.style.color = "#33ff33"; }
+            } else if (code === 'KeyW') {
+                // W 鍵：關閉同步功能
+                isSyncEnabled = false;
+                updateTicker("🚫 同步功能已關閉。按 X 仍可手動同步。");
+                const si = document.getElementById('sync-indicator');
+                if (si) { si.textContent = "OFF"; si.style.color = "#ff3333"; }
             }
 
             if (newIdx !== currentGearId) applyGearEffect(newIdx);
@@ -1057,6 +1094,14 @@
             }
         });
 
+        document.getElementById('quality-selector').addEventListener('change', (e) => {
+            const quality = e.target.value;
+            if (visualPlayer && visualPlayer.setPlaybackQuality) {
+                visualPlayer.setPlaybackQuality(quality);
+                updateTicker(`🎬 畫質設為: ${quality}`);
+            }
+        });
+
         document.getElementById('btn-unmute').addEventListener('click', () => {
             if (audioPlayer) {
                 audioPlayer.unMute(); audioPlayer.setVolume(100);
@@ -1100,11 +1145,8 @@
         }
         if (mobileSync) {
             mobileSync.addEventListener('click', () => {
-                if (visualPlayer && audioPlayer) {
-                    audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
-                    updateTicker("🔄 手動同步核心中...");
-                    if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
-                }
+                handleAction('KeyX');
+                if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
             });
         }
 
