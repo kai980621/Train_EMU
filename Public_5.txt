@@ -677,7 +677,7 @@
                         const drift = Math.abs(vpTime - apTime);
 
                         // 容差提高到 3.0 秒。網路影片極難完全同步，不要追得太緊才不會「口吃」。
-                        if (drift > 5.0) {
+                        if (drift > 3.0) {
                             console.log("[Sync] 正在校正音訊漂移: " + drift + "s");
                             isSyncingNow = true;
                             audioPlayer.seekTo(vpTime, true);
