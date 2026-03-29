@@ -408,7 +408,8 @@
             position: absolute;
             top: 60px;
             left: 30px;
-            width: 440px;
+            width: 340px;
+            height: auto;
             max-height: 80vh;
             overflow-y: auto;
             padding: 25px;
@@ -416,62 +417,21 @@
             z-index: 500;
         }
 
-        .stn-table-header {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 40px;
-            gap: 10px;
-            padding: 5px 10px;
-            font-size: 10px;
-            font-weight: 900;
-            opacity: 0.4;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
         .stn-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 40px;
-            gap: 10px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.03);
-            margin-bottom: 4px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 5px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stn-row input {
-            background: transparent !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 4px !important;
-            text-align: left !important;
-            font-size: 12px !important;
-            color: #fff !important;
-            cursor: text;
-        }
-
-        .stn-row input:focus {
-            background: rgba(255, 255, 255, 0.05) !important;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
         }
 
         .stn-row:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .delete-btn {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-weight: 900;
-            opacity: 0.5;
-            transition: 0.2s;
-        }
-
-        .delete-btn:hover {
-            opacity: 1;
-            transform: scale(1.2);
+            background: rgba(255, 255, 255, 0.15);
         }
     </style>
 </head>
@@ -515,13 +475,9 @@
 
         <!-- Smart Learning Logic UI -->
         <div id="smart-toast" class="glass-panel">
-            <div style="font-weight: 900; margin-bottom: 8px;">STATION DISCOVERY</div>
+            <div style="font-weight: 900; margin-bottom: 8px;">NEW STATION DETECTED</div>
+            <div style="font-size: 11px; opacity: 0.6; margin-bottom: 5px;">ADD THIS STOP TO MEMORY</div>
             <input type="text" id="stn-input" placeholder="STATION NAME (e.g. SHINJUKU)">
-            <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 10px; opacity: 0.6;">BROADCAST</span>
-                <input type="number" id="bc-offset" value="15" style="width: 60px; margin: 0; padding: 5px;">
-                <span style="font-size: 10px; opacity: 0.6;">S BEFORE</span>
-            </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="memorizeStation()"
                     style="flex: 2; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 900; cursor: pointer;">MEMORIZE</button>
@@ -542,20 +498,14 @@
                 style="width:100%; padding:15px; background:var(--safe); color:#000; border:none; border-radius:6px; font-weight:900; cursor:pointer; margin-bottom:15px; font-size:14px;">+
                 MARK CURRENT POSITION</button>
 
-            <div class="stn-table-header">
-                <span>STATION NAME</span>
-                <span>ARRIVAL (S)</span>
-                <span>BROADCAST (S)</span>
-                <span></span>
-            </div>
-            <div id="stn-list-container" style="margin-bottom: 20px; max-height: 250px; overflow-y: auto;">
+            <div id="stn-list-container" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
                 <!-- Stations with Delete buttons listed here -->
             </div>
 
             <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                 <div style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 10px;">ADVANCED DATA IMPORT
                 </div>
-                <textarea id="batch-input" placeholder='[{"name":"STATION","time":120,"bcOffset":15},...]'
+                <textarea id="batch-input" placeholder='[{"name":"STATION","time":120},...]'
                     style="width:100%; height:60px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:monospace; padding:10px; font-size:10px; outline:none;"></textarea>
                 <button id="btn-import" onclick="importBatch()"
                     style="width:100%; padding:10px; background:rgba(255,255,255,0.1); border:none; border-radius:6px; color:#fff; font-weight:800; cursor:pointer; margin-top:10px; font-size:12px;">INJECT
@@ -709,11 +659,6 @@
                 const vidStations = memory[currentVideoId] || [];
                 const currentSTN = vidStations.find(s => Math.abs(s.time - time) < 3);
 
-                // Auto A/V Sync Drift Correction
-                if (Math.abs(visualPlayer.getCurrentTime() - audioPlayer.getCurrentTime()) > 0.5) {
-                    audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
-                }
-
                 if (currentSTN) {
                     document.getElementById('stn-name').textContent = currentSTN.name;
                     document.getElementById('stn-dist').textContent = "--- ARRIVED ---";
@@ -727,12 +672,7 @@
                         const dist = Math.max(0, Math.floor((nextSTN.time - exactTime) * 16.6) - 1);
                         document.getElementById('stn-dist').textContent = `DIST: ${dist}m | T-${Math.ceil(nextSTN.time - exactTime)}s`;
                         document.getElementById('stn-name').style.color = '#fff';
-
-                        // Broadcast Trigger Logic
-                        const offset = nextSTN.bcOffset || 15;
-                        if (Math.abs((nextSTN.time - exactTime) - offset) < 0.2) {
-                            if (platformAnnounce.paused) platformAnnounce.play().catch(() => { });
-                        }
+                        if (Math.floor(nextSTN.time - exactTime) === 15) platformAnnounce.play().catch(() => { });
                     } else {
                         document.getElementById('stn-name').textContent = "---";
                         document.getElementById('stn-dist').textContent = "EN ROUTE";
@@ -756,20 +696,13 @@
             }
             container.innerHTML = vidStations.map((s, idx) => `
                 <div class="stn-row">
-                    <input type="text" value="${s.name}" onchange="saveStation(${idx}, 'name', this.value)">
-                    <input type="number" value="${s.time}" onchange="saveStation(${idx}, 'time', this.value)">
-                    <input type="number" value="${s.bcOffset || 15}" onchange="saveStation(${idx}, 'bcOffset', this.value)">
-                    <button class="delete-btn" onclick="deleteStation(${idx})">X</button>
+                    <div style="flex:1" onclick="visualPlayer.seekTo(${s.time}); audioPlayer.seekTo(${s.time})">
+                        <span style="font-weight:900;">${idx + 1}. ${s.name}</span>
+                        <span style="opacity:0.3; font-size:10px; margin-left:5px;">${s.time}s</span>
+                    </div>
+                    <button onclick="deleteStation(${idx})" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:5px; font-weight:900;">X</button>
                 </div>
             `).join('');
-        }
-
-        function saveStation(idx, field, val) {
-            const v = (field === 'name') ? val : parseFloat(val);
-            memory[currentVideoId][idx][field] = v;
-            if (field === 'time') memory[currentVideoId].sort((a, b) => a.time - b.time);
-            localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
-            refreshStnList();
         }
 
         function deleteStation(idx) {
@@ -881,10 +814,8 @@
         function memorizeStation() {
             const name = document.getElementById('stn-input').value.trim() || 'STATION';
             const time = Math.floor(visualPlayer.getCurrentTime());
-            const bcOffset = parseFloat(document.getElementById('bc-offset').value) || 15;
-
             if (!memory[currentVideoId]) memory[currentVideoId] = [];
-            memory[currentVideoId].push({ name, time, bcOffset });
+            memory[currentVideoId].push({ name, time });
             memory[currentVideoId].sort((a, b) => a.time - b.time);
             localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
             document.getElementById('stn-input').value = "";
@@ -932,12 +863,6 @@
                 ind.className = 'door-open'; ind.textContent = 'DOOR OPEN';
                 if (currentGearId > 5) applyGear(5);
                 log("DOOR OPERATIONS ACTIVE");
-
-                // Smart Logic: Prompt on Door Open if station unknown
-                const time = Math.floor(visualPlayer.getCurrentTime());
-                const exists = (memory[currentVideoId] || []).some(s => Math.abs(s.time - time) < 10);
-                if (!exists) document.getElementById('smart-toast').style.display = 'block';
-
             } else if (code === 'KeyZ') {
                 if (pGearLocked) log("CLEAR DOORS BEFORE START", true);
                 else applyGear(Math.min(10, currentGearId + 1));
