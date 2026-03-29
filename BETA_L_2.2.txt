@@ -116,13 +116,13 @@
         }
 
         #speed-value {
-            font-size: 110px;
+            font-size: 80px;
             font-weight: 800;
             line-height: 1;
             font-variant-numeric: tabular-nums;
-            letter-spacing: -6px;
+            letter-spacing: -4px;
             color: #fff;
-            text-shadow: 0 0 40px rgba(0, 180, 255, 0.4);
+            text-shadow: 0 0 30px rgba(0, 180, 255, 0.4);
         }
 
         .speed-label {
@@ -193,17 +193,17 @@
             font-weight: 900;
             letter-spacing: 2px;
             background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--safe);
-            color: var(--safe);
+            border: 1px solid var(--danger);
+            color: var(--danger);
             z-index: 10;
             text-transform: uppercase;
             transition: 0.3s;
         }
 
         .door-open {
-            border-color: var(--danger);
-            color: var(--danger);
-            box-shadow: 0 0 20px rgba(255, 59, 59, 0.3);
+            border-color: var(--safe) !important;
+            color: var(--safe) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
 
         /* Smart Learning UI */
@@ -276,15 +276,67 @@
             transform: translateY(-4px);
         }
 
-        #landscape-warning {
+        /* Mobile Optimized Controls */
+        #mobile-ctrl-pad {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
             display: none;
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 10000;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: 0.1s;
+        }
+
+        .touch-btn:active {
+            background: var(--accent);
+            transform: scale(0.9);
+            border-color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            #mobile-ctrl-pad {
+                display: flex;
+            }
+
+            #left-panel {
+                bottom: 20px;
+                left: 15px;
+            }
+
+            #mascon-v3 {
+                right: 15px;
+                bottom: 20px;
+                scale: 0.9;
+            }
+
+            .side-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+
+            #speed-value {
+                font-size: 60px;
+            }
         }
 
         @media screen and (orientation: portrait) {
@@ -293,22 +345,7 @@
             }
         }
 
-        /* Input Styles */
-        input,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border-radius: 6px;
-            outline: none;
-            margin: 10px 0;
-            font-family: inherit;
-            font-weight: 600;
-            text-align: center;
-        }
-
+        /* Restored Layout Styles */
         #station-v2 {
             position: absolute;
             top: 60px;
@@ -341,7 +378,6 @@
             letter-spacing: 2px;
         }
 
-        /* Stop Evaluation */
         #eval-modal {
             position: absolute;
             top: 30%;
@@ -367,53 +403,45 @@
             opacity: 0.6;
         }
 
-        #jump-controls {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 420px;
-            z-index: 10;
-            pointer-events: none;
+        #btn-prev-stn {
+            position: absolute; bottom: 30px; left: 30px; z-index: 5000;
+        }
+
+        #btn-next-stn {
+            position: absolute; bottom: 30px; right: 30px; z-index: 5000;
         }
 
         .jump-btn {
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            background: var(--glass);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: auto;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 50px; height: 50px; border-radius: 50%; background: var(--glass);
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1); pointer-events: auto;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
-        .jump-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .jump-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* Route Management Overlay */
+        /* Route UI */
         #route-manager {
             position: absolute;
-            top: 60px;
-            left: 30px;
-            width: 440px;
-            max-height: 80vh;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
+            max-width: 500px;
+            max-height: 85vh;
             overflow-y: auto;
             padding: 25px;
             display: none;
-            z-index: 500;
+            z-index: 5000;
+        }
+
+        @media (max-width: 900px) {
+            #route-manager {
+                width: calc(100% - 60px);
+                left: 30px;
+                right: 30px;
+            }
+
+            #jump-controls {
+                width: calc(100% - 240px);
+            }
         }
 
         .stn-table-header {
@@ -449,14 +477,7 @@
             font-size: 12px !important;
             color: #fff !important;
             cursor: text;
-        }
-
-        .stn-row input:focus {
-            background: rgba(255, 255, 255, 0.05) !important;
-        }
-
-        .stn-row:hover {
-            background: rgba(255, 255, 255, 0.08);
+            width: 100%;
         }
 
         .delete-btn {
@@ -469,15 +490,31 @@
             transition: 0.2s;
         }
 
-        .delete-btn:hover {
-            opacity: 1;
-            transform: scale(1.2);
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 6px;
+            outline: none;
+            margin: 10px 0;
+            font-family: inherit;
+            font-weight: 600;
+            text-align: center;
         }
     </style>
 </head>
 
 <body>
-    <div id="landscape-warning">ROTATE FOR LANDSCAPE MODE</div>
+    <div id="landscape-warning">
+        <div>
+            <div style="font-size: 40px; margin-bottom: 20px;">🔄</div>
+            <div style="font-weight: 800; letter-spacing: 2px;">ROTATE FOR LANDSCAPE</div>
+            <div style="font-size: 12px; opacity: 0.5; margin-top: 10px;">MOBILE OPTIMIZATION ACTIVE</div>
+        </div>
+    </div>
 
     <div id="startup-screen">
         <h1 style="letter-spacing: -3px; font-size: 48px; margin-bottom: 20px;">EMU STUDIO 2.2</h1>
@@ -485,11 +522,17 @@
         <button id="btn-master-start" class="start-btn" disabled>INITIALIZING ENGINE...</button>
     </div>
 
-    <!-- YouTube Pillars -->
     <div id="visual-player-container"></div>
     <div id="audio-player-container"></div>
 
     <div id="app-container" style="display: none;">
+        <!-- Mobile Touch Pad -->
+        <div id="mobile-ctrl-pad">
+            <div class="touch-btn" onclick="handleAction('KeyQ')" style="border-color: var(--danger);">Q</div>
+            <div class="touch-btn" onclick="handleAction('KeyE')" style="border-color: var(--safe);">E</div>
+            <div class="touch-btn" onclick="handleAction('KeyX')" style="font-size: 18px; color: var(--accent);">SYNC
+            </div>
+        </div>
         <!-- Status Notification Bar -->
         <div id="status-bar">
             <div id="status-led"></div>
@@ -514,19 +557,17 @@
         </div>
 
         <!-- Smart Learning Logic UI -->
-        <div id="smart-toast" class="glass-panel">
-            <div style="font-weight: 900; margin-bottom: 8px;">STATION DISCOVERY</div>
-            <input type="text" id="stn-input" placeholder="STATION NAME (e.g. SHINJUKU)">
-            <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 10px; opacity: 0.6;">BROADCAST</span>
-                <input type="number" id="bc-offset" value="15" style="width: 60px; margin: 0; padding: 5px;">
-                <span style="font-size: 10px; opacity: 0.6;">S BEFORE</span>
+        <div id="smart-toast" class="glass-panel"
+            style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%); padding: 25px; display: none; z-index: 6000; text-align: center; width: 340px;">
+            <div style="font-weight: 900; margin-bottom: 8px; font-size: 18px; color: var(--accent);">STATION DISCOVERY
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div style="font-size: 11px; opacity: 0.6; margin-bottom: 15px;">ENTER NAME TO CREATE DATA LINK</div>
+            <input type="text" id="stn-input" placeholder="STATION NAME (e.g. SHINJUKU)" style="font-size:16px;">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button onclick="memorizeStation()"
-                    style="flex: 2; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 900; cursor: pointer;">MEMORIZE</button>
+                    style="flex: 2; padding: 15px; background: var(--safe); color: #000; border: none; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 16px;">MEMORIZE</button>
                 <button onclick="hideSmartToast()"
-                    style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px; cursor: pointer;">SKIP</button>
+                    style="flex: 1; padding: 15px; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">SKIP</button>
             </div>
         </div>
 
@@ -535,17 +576,17 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin: 0; font-size: 20px; letter-spacing: -0.5px;">DATA BANK</h3>
                 <button onclick="document.getElementById('route-manager').style.display='none'" class="side-btn"
-                    style="width:30px; height:30px; font-size:14px;">X</button>
+                    style="width:40px; height:40px; font-size:18px;">X</button>
             </div>
 
-            <button onclick="memorizeStation()"
-                style="width:100%; padding:15px; background:var(--safe); color:#000; border:none; border-radius:6px; font-weight:900; cursor:pointer; margin-bottom:15px; font-size:14px;">+
-                MARK CURRENT POSITION</button>
+            <button onclick="document.getElementById('smart-toast').style.display='block'"
+                style="width:100%; padding:15px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; font-weight:900; cursor:pointer; margin-bottom:15px; font-size:16px;">+
+                CREATE NEW STATION</button>
 
             <div class="stn-table-header">
                 <span>STATION NAME</span>
-                <span>ARRIVAL (S)</span>
-                <span>BROADCAST (S)</span>
+                <span>OPEN DOORS (S)</span>
+                <span>CLOSE DOORS (S)</span>
                 <span></span>
             </div>
             <div id="stn-list-container" style="margin-bottom: 20px; max-height: 250px; overflow-y: auto;">
@@ -555,7 +596,7 @@
             <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                 <div style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 10px;">ADVANCED DATA IMPORT
                 </div>
-                <textarea id="batch-input" placeholder='[{"name":"STATION","time":120,"bcOffset":15},...]'
+                <textarea id="batch-input" placeholder='[{"name":"STATION","time":120,"closeTime":150},...]'
                     style="width:100%; height:60px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:monospace; padding:10px; font-size:10px; outline:none;"></textarea>
                 <button id="btn-import" onclick="importBatch()"
                     style="width:100%; padding:10px; background:rgba(255,255,255,0.1); border:none; border-radius:6px; color:#fff; font-weight:800; cursor:pointer; margin-top:10px; font-size:12px;">INJECT
@@ -577,23 +618,21 @@
         </div>
 
         <div id="help-modal" class="glass-panel"
-            style="display: none; position: absolute; top: 100px; left: 30px; width: 320px; padding: 25px; z-index: 2000; font-size: 14px; line-height: 1.8;">
+            style="display: none; position: absolute; top: 100px; left: 30px; width: 340px; padding: 25px; z-index: 6000; font-size: 14px; line-height: 1.8;">
             <h3 style="margin: 0 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px;">SYSTEM MANUAL
             </h3>
             <b>[Z]</b> ACCEL / <b>[S]</b> BRAKE<br>
             <b>[A]</b> NEUTRAL / <b>[X]</b> RE-SYNC<br>
-            <b>[Q]</b> OPEN DOORS / <b>[E]</b> CLOSE DOORS<br>
+            <b>[Q], [E], or [SPACE]</b> TOGGLE DOORS<br>
             <hr style="opacity: 0.1; margin: 15px 0;">
-            <b>SMART DISCOVERY:</b><br>
-            Stop for 3s to mark a station automatically, or use the 🗺 panel to add manually.
+            <b>SMART DISCOVERY & DOORS:</b><br>
+            Use <b>DOORS</b> button to open automatically. Future uses will Auto-Update the timings for you!
             <button onclick="document.getElementById('help-modal').style.display='none'" class="start-btn"
                 style="width:100%; margin-top:15px; font-size:14px; padding:10px;">DISMISS</button>
         </div>
 
-        <div id="jump-controls">
-            <div class="jump-btn" id="btn-prev-stn" onclick="jumpStation(-1)">⏮</div>
-            <div class="jump-btn" id="btn-next-stn" onclick="jumpStation(1)">⏭</div>
-        </div>
+        <div id="btn-prev-stn" class="jump-btn" onclick="jumpStation(-1)">⏮</div>
+        <div id="btn-next-stn" class="jump-btn" onclick="jumpStation(1)">⏭</div>
 
         <div id="speedometer">
             <div class="speed-label">KILOMETERS PER HOUR</div>
@@ -709,16 +748,11 @@
                 const vidStations = memory[currentVideoId] || [];
                 const currentSTN = vidStations.find(s => Math.abs(s.time - time) < 3);
 
-                // Auto A/V Sync Drift Correction
-                if (Math.abs(visualPlayer.getCurrentTime() - audioPlayer.getCurrentTime()) > 0.5) {
-                    audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
-                }
-
                 if (currentSTN) {
                     document.getElementById('stn-name').textContent = currentSTN.name;
                     document.getElementById('stn-dist').textContent = "--- ARRIVED ---";
                     document.getElementById('stn-name').style.color = 'var(--accent)';
-                    if (currentSpeed === 0 && !pGearLocked && !evalShown) evaluateStop(Math.abs(exactTime - currentSTN.time));
+                    if (currentSpeed === 0 && pGearLocked && !evalShown) evaluateStop(Math.abs(exactTime - currentSTN.time));
                 } else {
                     evalShown = false;
                     const nextSTN = vidStations.find(s => s.time > time);
@@ -728,15 +762,25 @@
                         document.getElementById('stn-dist').textContent = `DIST: ${dist}m | T-${Math.ceil(nextSTN.time - exactTime)}s`;
                         document.getElementById('stn-name').style.color = '#fff';
 
-                        // Broadcast Trigger Logic
-                        const offset = nextSTN.bcOffset || 15;
-                        if (Math.abs((nextSTN.time - exactTime) - offset) < 0.2) {
+                        // Broadcast Trigger Logic - Fixed at 15s
+                        if (Math.abs((nextSTN.time - exactTime) - 15) < 0.2) {
                             if (platformAnnounce.paused) platformAnnounce.play().catch(() => { });
                         }
                     } else {
                         document.getElementById('stn-name').textContent = "---";
                         document.getElementById('stn-dist').textContent = "EN ROUTE";
                     }
+                }
+
+                if (pGearLocked) {
+                    const activeStn = vidStations.find(s => Math.abs(s.time - exactTime) < 60);
+                    if (activeStn && activeStn.closeTime && activeStn.closeTime > exactTime) {
+                        document.getElementById('door-indicator').textContent = `OPEN [ CLOSE IN ${Math.ceil(activeStn.closeTime - exactTime)}s ]`;
+                    } else {
+                        document.getElementById('door-indicator').textContent = `OPEN [ ${Math.floor(exactTime)}s ]`;
+                    }
+                } else if (document.getElementById('door-indicator').textContent !== 'DOOR LOCKED') {
+                    document.getElementById('door-indicator').textContent = 'DOOR LOCKED';
                 }
 
                 if (!isAutoPaused && !visualAutoPaused) {
@@ -757,8 +801,8 @@
             container.innerHTML = vidStations.map((s, idx) => `
                 <div class="stn-row">
                     <input type="text" value="${s.name}" onchange="saveStation(${idx}, 'name', this.value)">
-                    <input type="number" value="${s.time}" onchange="saveStation(${idx}, 'time', this.value)">
-                    <input type="number" value="${s.bcOffset || 15}" onchange="saveStation(${idx}, 'bcOffset', this.value)">
+                    <input type="number" value="${Math.floor(s.time)}" onchange="saveStation(${idx}, 'time', this.value)">
+                    <input type="number" value="${s.closeTime ? Math.floor(s.closeTime) : ''}" placeholder="--" onchange="saveStation(${idx}, 'closeTime', this.value)">
                     <button class="delete-btn" onclick="deleteStation(${idx})">X</button>
                 </div>
             `).join('');
@@ -813,9 +857,12 @@
             else target = [...vidStations].reverse().find(s => s.time < time - 5);
 
             if (target) {
+                currentSpeed = 0; applyGear(5); // Stop physics before jumping
                 visualPlayer.seekTo(target.time, true);
                 audioPlayer.seekTo(target.time, true);
                 log(`JUMPED TO: ${target.name}`);
+            } else {
+                log(`NO ${offset > 0 ? "NEXT" : "PREVIOUS"} STATION FOUND`, true);
             }
         }
 
@@ -843,23 +890,15 @@
             if (visualPlayer && visualPlayer.setPlaybackRate) {
                 let rate = pGearLocked ? 1.0 : (0.5 + currentSpeed * 0.025);
                 rate = Math.max(0.5, Math.min(2.0, Math.round(rate * 10) / 10));
-                if (rate !== lastSetRate) { visualPlayer.setPlaybackRate(rate); lastSetRate = rate; }
+                if (rate !== lastSetRate) { 
+                    visualPlayer.setPlaybackRate(rate); 
+                    if (audioPlayer && audioPlayer.setPlaybackRate) audioPlayer.setPlaybackRate(rate);
+                    lastSetRate = rate; 
+                }
             }
 
             document.getElementById('speed-value').textContent = Math.floor(currentSpeed);
             document.getElementById('speed-value').style.color = gear.color;
-
-            // Smart Station Discovery (Standstill for 3s = Possible Station)
-            if (currentSpeed === 0) {
-                if (!stopStartTime) stopStartTime = Date.now();
-                else if (Date.now() - stopStartTime > 3000) {
-                    const time = Math.floor(visualPlayer.getCurrentTime());
-                    const exists = (memory[currentVideoId] || []).some(s => Math.abs(s.time - time) < 10);
-                    if (!exists) document.getElementById('smart-toast').style.display = 'block';
-                }
-            } else {
-                stopStartTime = null; hideSmartToast();
-            }
 
             // Power-Save Auto Pause
             if (currentSpeed === 0 && !pGearLocked && !isAutoPaused && !visualAutoPaused && !doorTimer) {
@@ -880,16 +919,15 @@
 
         function memorizeStation() {
             const name = document.getElementById('stn-input').value.trim() || 'STATION';
-            const time = Math.floor(visualPlayer.getCurrentTime());
-            const bcOffset = parseFloat(document.getElementById('bc-offset').value) || 15;
+            const exactTime = visualPlayer.getCurrentTime();
 
             if (!memory[currentVideoId]) memory[currentVideoId] = [];
-            memory[currentVideoId].push({ name, time, bcOffset });
+            memory[currentVideoId].push({ name, time: exactTime, closeTime: exactTime + 20 });
             memory[currentVideoId].sort((a, b) => a.time - b.time);
             localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
             document.getElementById('stn-input').value = "";
             refreshStnList();
-            hideSmartToast(); log(`${name} MEMORIZED`);
+            hideSmartToast(); log(`${name} MEMORIZED AND UPDATED`);
             if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
         }
 
@@ -921,23 +959,47 @@
             if (!isStarted || isPaused) return;
             const ind = document.getElementById('door-indicator');
 
-            if (code === 'KeyE' && currentSpeed === 0) {
-                doorCloseSFX.play().catch(() => { });
-                pGearLocked = false;
-                ind.className = ''; ind.textContent = 'DOOR LOCKED';
-                log("READY FOR DEPARTURE");
-            } else if (code === 'KeyQ' && currentSpeed === 0) {
-                doorOpenSFX.play().catch(() => { });
-                pGearLocked = true;
-                ind.className = 'door-open'; ind.textContent = 'DOOR OPEN';
-                if (currentGearId > 5) applyGear(5);
-                log("DOOR OPERATIONS ACTIVE");
+            // Single Button UI toggles doors dynamically
+            if (code === 'KeyE' || code === 'KeyQ' || code === 'ToggleDoors' || code === 'Space') {
+                if (currentSpeed > 0) return; // Prevent door operations while moving
 
-                // Smart Logic: Prompt on Door Open if station unknown
-                const time = Math.floor(visualPlayer.getCurrentTime());
-                const exists = (memory[currentVideoId] || []).some(s => Math.abs(s.time - time) < 10);
-                if (!exists) document.getElementById('smart-toast').style.display = 'block';
+                // CLOSE DOORS
+                if (code === 'KeyE' || ((code === 'ToggleDoors' || code === 'Space') && pGearLocked)) {
+                    doorCloseSFX.play().catch(() => { });
+                    pGearLocked = false;
+                    ind.className = ''; ind.textContent = 'DOOR LOCKED';
+                    log("READY FOR DEPARTURE");
 
+                    // Auto-Update Close Time For Active Station
+                    const exactTime = visualPlayer.getCurrentTime();
+                    const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 60);
+                    if (stn) {
+                        stn.closeTime = exactTime;
+                        localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                        refreshStnList();
+                        log(`${stn.name} CLOSE TIME UPDATED`);
+                    }
+                }
+                // OPEN DOORS
+                else if (code === 'KeyQ' || ((code === 'ToggleDoors' || code === 'Space') && !pGearLocked)) {
+                    doorOpenSFX.play().catch(() => { });
+                    pGearLocked = true;
+                    ind.className = 'door-open'; ind.textContent = 'DOOR OPEN';
+                    if (currentGearId > 5) applyGear(5);
+                    log("DOOR OPERATIONS ACTIVE");
+
+                    // Auto-Update Open Time OR Prompt for New Station
+                    const exactTime = visualPlayer.getCurrentTime();
+                    const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 40);
+                    if (stn) {
+                        stn.time = exactTime;
+                        localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                        refreshStnList();
+                        log(`${stn.name} OPEN TIME UPDATED`);
+                    } else {
+                        document.getElementById('smart-toast').style.display = 'block';
+                    }
+                }
             } else if (code === 'KeyZ') {
                 if (pGearLocked) log("CLEAR DOORS BEFORE START", true);
                 else applyGear(Math.min(10, currentGearId + 1));
