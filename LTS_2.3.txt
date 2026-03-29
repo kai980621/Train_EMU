@@ -403,17 +403,9 @@
             opacity: 0.6;
         }
 
-        #btn-prev-stn {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            z-index: 5000;
-        }
-
+        #btn-prev-stn,
         #btn-next-stn {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
+            margin: 0;
             z-index: 5000;
         }
 
@@ -648,12 +640,26 @@
                 style="width:100%; margin-top:15px; font-size:14px; padding:10px;">DISMISS</button>
         </div>
 
-        <div id="btn-prev-stn" class="jump-btn" onclick="jumpStation(-1)">⏮</div>
-        <div id="btn-next-stn" class="jump-btn" onclick="jumpStation(1)">⏭</div>
+        <!-- Station Jump Popup Menu -->
+        <div id="jump-menu-modal" class="glass-panel"
+            style="display: none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 340px; padding: 25px; z-index: 7000;">
+            <h3 id="jump-menu-title"
+                style="margin: 0 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px;">SELECT STATION
+            </h3>
+            <div id="jump-menu-list"
+                style="display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; margin-bottom: 15px;">
+            </div>
+            <button onclick="document.getElementById('jump-menu-modal').style.display='none'" class="start-btn"
+                style="width:100%; font-size:14px; padding:10px;">CANCEL</button>
+        </div>
 
         <div id="speedometer">
             <div class="speed-label">KILOMETERS PER HOUR</div>
-            <div id="speed-value">0</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 5px;">
+                <div id="btn-prev-stn" class="jump-btn" onclick="openJumpMenu(-1)">⏮</div>
+                <div id="speed-value">0</div>
+                <div id="btn-next-stn" class="jump-btn" onclick="openJumpMenu(1)">⏭</div>
+            </div>
         </div>
 
         <div id="mascon-v3" class="glass-panel">
@@ -870,21 +876,38 @@
             setTimeout(() => { modal.style.opacity = '0'; setTimeout(() => { modal.style.display = 'none'; modal.style.opacity = '1'; }, 1000); }, 3000);
         }
 
-        function jumpStation(offset) {
+        function openJumpMenu(offset) {
             const time = visualPlayer.getCurrentTime();
             const vidStations = memory[currentVideoId] || [];
-            let target = null;
-            if (offset > 0) target = vidStations.find(s => s.time > time + 5);
-            else target = [...vidStations].reverse().find(s => s.time < time - 5);
+            let list = [];
 
-            if (target) {
-                currentSpeed = 0; applyGear(5); // Stop physics before jumping
-                visualPlayer.seekTo(target.time, true);
-                audioPlayer.seekTo(target.time, true);
-                log(`JUMPED TO: ${target.name}`);
+            if (offset > 0) {
+                document.getElementById('jump-menu-title').textContent = "JUMP TO NEXT";
+                list = vidStations.filter(s => s.time > time + 5);
             } else {
-                log(`NO ${offset > 0 ? "NEXT" : "PREVIOUS"} STATION FOUND`, true);
+                document.getElementById('jump-menu-title').textContent = "JUMP TO PREVIOUS";
+                list = [...vidStations].filter(s => s.time < time - 5).reverse();
             }
+
+            const container = document.getElementById('jump-menu-list');
+            if (list.length === 0) {
+                container.innerHTML = `<div style="opacity: 0.5; text-align: center;">NO STATIONS FOUND</div>`;
+            } else {
+                container.innerHTML = list.map(s => `
+                    <button onclick="executeJump(${s.time})" style="padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 800; text-align: left; cursor: pointer; border-radius: 6px; font-size: 16px;">
+                        ${s.name} <span style="float: right; opacity: 0.5;">${Math.floor(s.time / 60)}:${Math.floor(s.time % 60).toString().padStart(2, '0')}</span>
+                    </button>
+                `).join('');
+            }
+            document.getElementById('jump-menu-modal').style.display = 'block';
+        }
+
+        function executeJump(targetTime) {
+            document.getElementById('jump-menu-modal').style.display = 'none';
+            currentSpeed = 0; applyGear(5); // Stop physics before jumping
+            visualPlayer.seekTo(targetTime, true);
+            audioPlayer.seekTo(targetTime, true);
+            log(`JUMPED TO STATION`);
         }
 
         function importBatch() {
@@ -913,11 +936,6 @@
                 rate = Math.max(0.5, Math.min(2.0, Math.round(rate * 10) / 10));
                 if (rate !== lastSetRate) {
                     visualPlayer.setPlaybackRate(rate);
-                    if (audioPlayer && audioPlayer.setPlaybackRate) {
-                        try {
-                            audioPlayer.setPlaybackRate(rate);
-                        } catch (e) { }
-                    }
                     lastSetRate = rate;
                 }
             }
@@ -995,8 +1013,13 @@
                     ind.className = ''; ind.textContent = 'DOOR LOCKED';
                     log("READY FOR DEPARTURE");
 
-                    // Auto-Update Close Time For Active Station
                     const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Close Time For Active Station
                     const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 60);
                     if (stn) {
                         stn.closeTime = exactTime;
@@ -1013,8 +1036,13 @@
                     if (currentGearId > 5) applyGear(5);
                     log("DOOR OPERATIONS ACTIVE");
 
-                    // Auto-Update Open Time OR Prompt for New Station
                     const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Open Time OR Prompt for New Station
                     const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 40);
                     if (stn) {
                         stn.time = exactTime;
