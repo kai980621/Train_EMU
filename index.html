@@ -913,11 +913,6 @@
                 rate = Math.max(0.5, Math.min(2.0, Math.round(rate * 10) / 10));
                 if (rate !== lastSetRate) {
                     visualPlayer.setPlaybackRate(rate);
-                    if (audioPlayer && audioPlayer.setPlaybackRate) {
-                        try {
-                            audioPlayer.setPlaybackRate(rate);
-                        } catch (e) { }
-                    }
                     lastSetRate = rate;
                 }
             }
@@ -995,8 +990,13 @@
                     ind.className = ''; ind.textContent = 'DOOR LOCKED';
                     log("READY FOR DEPARTURE");
 
-                    // Auto-Update Close Time For Active Station
                     const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Close Time For Active Station
                     const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 60);
                     if (stn) {
                         stn.closeTime = exactTime;
@@ -1013,8 +1013,13 @@
                     if (currentGearId > 5) applyGear(5);
                     log("DOOR OPERATIONS ACTIVE");
 
-                    // Auto-Update Open Time OR Prompt for New Station
                     const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Open Time OR Prompt for New Station
                     const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 40);
                     if (stn) {
                         stn.time = exactTime;
