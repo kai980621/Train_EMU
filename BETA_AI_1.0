@@ -147,53 +147,6 @@
             letter-spacing: 2px;
         }
 
-        /* ECHO AI Scanner HUD */
-        #ai-scanner-overlay {
-            position: absolute;
-            inset: 0;
-            z-index: 5;
-            pointer-events: none;
-            display: none;
-        }
-
-        .scanner-box {
-            position: absolute;
-            border: 2px solid var(--accent);
-            border-radius: 4px;
-            background: rgba(0, 229, 255, 0.1);
-            transition: all 0.3s;
-            display: flex;
-            align-items: flex-start;
-            padding: 5px;
-            font-family: var(--font-mono);
-            font-size: 10px;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
-
-        .scanner-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
-            animation: scanLine 4s infinite ease-in-out;
-        }
-
-        @keyframes scanLine {
-            0% {
-                top: 0%;
-            }
-
-            50% {
-                top: 100%;
-            }
-
-            100% {
-                top: 0%;
-            }
-        }
-
         .ai-pulse {
             width: 8px;
             height: 8px;
@@ -806,14 +759,13 @@
     </div>
 
     <div id="startup-layer">
-        <div class="logo">KAI</div>
-        <div class="logo-v">TRAINSTUDIO</div>
+        <div class="logo-v">EDGERAIL</div>
         <div style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 4px; color: var(--text-dim);">
-            專業電聯車模擬器 V3.0 BETA AI</div>
+            專業電聯車模擬器 V2.5</div>
         <button id="btn-master-launch" class="launch-btn" disabled>系統初始化中...</button>
         <div id="startup-log"
             style="margin-top: 20px; font-size: 11px; font-family: var(--font-mono); color: var(--accent); opacity: 0.7;">
-            CORE_ENGINE_V3.0 BETA AI 載入中</div>
+            CORE_ENGINE_V2.5 載入中</div>
     </div>
 
     <div id="visual-player-container"></div>
@@ -873,7 +825,7 @@
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div class="stn-item" style="grid-template-columns: 1fr auto;">
                     <span>ATO (定速巡航/自動駕駛)</span>
-                    <input type="checkbox" id="chk-ato" style="width: 24px; height: 24px;" checked>
+                    <input type="checkbox" id="chk-ato" style="width: 24px; height: 24px;">
                 </div>
                 <div class="stn-item" style="grid-template-columns: 1fr auto;">
                     <span>TASC (定位置停止輔助)</span>
@@ -881,7 +833,7 @@
                 </div>
                 <div class="stn-item" style="grid-template-columns: 1fr auto;">
                     <span>AUTO DOORS (自動車門)</span>
-                    <input type="checkbox" id="chk-autodoor" style="width: 24px; height: 24px;" checked>
+                    <input type="checkbox" id="chk-autodoor" style="width: 24px; height: 24px;">
                 </div>
                 <div class="stn-item" style="grid-template-columns: 1fr auto;">
                     <span>AI VOICE (語音助理)</span>
@@ -912,7 +864,7 @@
                 style="font-family: var(--font-ui); font-size: 12px; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div class="ai-pulse"></div>
-                    <span style="letter-spacing: 2px;">EDGERAIL AI CORE</span>
+                    <span style="letter-spacing: 2px;">EDGERAIL AI OS v4.0</span>
                 </div>
                 <div class="waveform">
                     <div class="wave-bar"></div>
@@ -924,7 +876,10 @@
             </div>
             <div id="ai-message"
                 style="font-size: 14px; line-height: 1.6; font-weight: 500; font-family: var(--font-main);">
-                系統隨時準備協助駕駛。</div>
+                系統初始化完成，隨時準備協助駕駛。</div>
+            <div id="ai-sub-msg"
+                style="font-size: 10px; color: var(--text-dim); margin-top: 8px; font-family: var(--font-mono);">
+                VOICE_MODULE: ONLINE | LATENCY: 24ms</div>
         </div>
     </div>
 
@@ -1030,35 +985,59 @@
                 { id: 9, name: 'P4', accel: 6.5, color: '#00b8ff' },
                 { id: 10, name: 'P5', accel: 9.5, color: '#008fff' }
             ],
-            PHYSICS_HZ: 5,
+            PHYSICS_HZ: 5, // Logic runs every 200ms
             MAX_SPEED: 130
         };
 
-        const ROUTE_LIBRARY = {
-            'TpxTlO68CWI': [
-                { name: "東京", time: 0, closeTime: 40 },
-                { name: "有樂町", time: 127.81, closeTime: 136.88 },
-                { name: "新橋", time: 236.09, closeTime: 252.88 },
-                { name: "兵松町", time: 372.69, closeTime: 382.85 },
-                { name: "田町", time: 506.24, closeTime: 546.87 },
-                { name: "高輪", time: 663.65, closeTime: 671.35 },
-                { name: "品川", time: 756.37, closeTime: 773.52 }
-            ]
+        let state = {
+            isStarted: false,
+            isPaused: false,
+            currentSpeed: 0,
+            currentGear: 5,
+            doorsOpen: false,
+            videoId: 'TpxTlO68CWI',
+            apiReady: false,
+            playersReady: 0,
+            memory: JSON.parse(localStorage.getItem('edgerail_st_v3') || '{}'),
+            lastRate: 1,
+            atoActive: false,
+            tascActive: true,
+            autoDoorActive: false,
+            evalShown: false,
+            scheduleOffset: 0,
+            aiVoiceEnabled: true,
+            isCoasting: false,
+            lastAITalk: 0,
+            atsAlarm: false
         };
 
+        // Legacy Data Migration
+        const legacyData = localStorage.getItem('emu_memory_v2');
+        if (legacyData && !localStorage.getItem('edgerail_st_v3')) {
+            localStorage.setItem('edgerail_st_v3', legacyData);
+            state.memory = JSON.parse(legacyData);
+        }
+
+        let vPlayer, aPlayer;
+        const sfx = {
+            announce: new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg'),
+            doorIn: new Audio('https://od.lk/s/OTFfMzg1ODI4MTVf/door_open.mp3'), // Generic high-quality placeholder
+            doorOut: new Audio('https://od.lk/s/OTFfMzg1ODI4MTZf/door_close.mp3')
+        };
+
+        // UI Binding Utilities
         const $ = id => document.getElementById(id);
         const log = (msg, level = 'info') => {
             const colors = { info: 'var(--accent)', error: 'var(--danger)', warn: 'var(--warning)' };
-            if ($('startup-log')) {
-                $('startup-log').textContent = msg.toUpperCase();
-                $('startup-log').style.color = colors[level];
-            }
+            $('startup-log').textContent = msg.toUpperCase();
+            $('startup-log').style.color = colors[level];
         };
 
         function onYouTubeIframeAPIReady() {
             state.apiReady = true;
             $('btn-master-launch').disabled = false;
             $('btn-master-launch').textContent = 'INITIALIZE COCKPIT';
+            log('CORE_SYSTEM READY');
         }
 
         $('btn-master-launch').onclick = () => {
@@ -1067,122 +1046,201 @@
         };
 
         function launchPlayers() {
-            const playerVars = { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestybranding: 1, rel: 0, iv_load_policy: 3, playsinline: 1 };
+            const playerVars = {
+                autoplay: 1, controls: 0, disablekb: 1, fs: 0,
+                modestbranding: 1, rel: 0, iv_load_policy: 3, playsinline: 1
+            };
+
             vPlayer = new YT.Player('visual-player-container', {
-                width: '100%', height: '100%', videoId: state.videoId,
+                width: '100%',
+                height: '100%',
+                videoId: state.videoId,
                 playerVars,
-                events: {
-                    onReady: onPlayerReady,
-                    onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) vPlayer.seekTo(0); }
-                }
+                events: { onReady: onPlayerReady, onStateChange: onVStateChange }
             });
-            aPlayer = new YT.Player('audio-player-container', { videoId: state.videoId, playerVars, events: { onReady: onPlayerReady } });
+
+            aPlayer = new YT.Player('audio-player-container', {
+                videoId: state.videoId,
+                playerVars,
+                events: { onReady: onPlayerReady }
+            });
         }
 
         function onPlayerReady() {
             state.playersReady++;
             if (state.playersReady === 2) {
-                vPlayer.mute(); aPlayer.unMute();
+                vPlayer.mute();
+                aPlayer.unMute();
                 $('startup-layer').style.opacity = '0';
                 setTimeout(() => {
                     $('startup-layer').style.display = 'none';
                     $('hud-layer').style.display = 'block';
                     state.isStarted = true;
                     updateMasconUI();
-                    checkCloudLibrary(state.videoId);
                     startEngineLoop();
                 }, 800);
             }
         }
 
+        function onVStateChange(e) {
+            if (e.data === YT.PlayerState.ENDED) vPlayer.seekTo(0);
+        }
+
         function startEngineLoop() {
             setInterval(() => {
                 if (!state.isStarted || state.isPaused) return;
-                const curTime = vPlayer.getCurrentTime(), vState = vPlayer.getPlayerState();
-                const stations = state.memory[state.videoId] || [];
+
+                const curTime = vPlayer.getCurrentTime();
+                const vState = vPlayer.getPlayerState();
+
+                // Clock & HUD
                 $('clock').textContent = new Date().toTimeString().split(' ')[0];
 
-                const current = stations.find(s => curTime >= s.time - 2 && curTime <= (s.closeTime || s.time + 30) + 2);
-                if (current) {
-                    $('stn-name').textContent = current.name;
-                    $('stn-meta').textContent = '月台停靠中';
+                const stations = state.memory[state.videoId] || [];
+                const currentStn = stations.find(s => curTime >= s.time - 3 && curTime <= (s.closeTime || s.time + 30) + 3);
+
+                if (currentStn) {
+                    $('stn-name').textContent = currentStn.name;
+                    $('stn-meta').textContent = '抵達月台 / 停車中';
                     $('stn-name').style.color = 'var(--accent)';
-                    if (state.currentSpeed === 0 && state.doorsOpen && !state.evalShown) showEvaluation(Math.abs(curTime - current.time));
+
+                    if (state.currentSpeed === 0 && state.doorsOpen) {
+                        const diff = Math.abs(curTime - currentStn.time);
+                        if (!state.evalShown) showEvaluation(diff);
+                    }
                 } else {
                     state.evalShown = false;
                     const next = stations.find(s => s.time > curTime);
                     if (next) {
                         const dist = Math.max(0, Math.floor((next.time - curTime) * 16.6));
+                        const etaError = (state.scheduleOffset >= 0 ? '+' : '') + state.scheduleOffset + 's';
                         $('stn-name').textContent = next.name;
-                        $('stn-meta').textContent = `距離: ${dist}m | 預計: ${Math.ceil(next.time - curTime)}s`;
+                        $('stn-meta').textContent = `下一站: ${dist}m | 預計抵達: ${Math.ceil(next.time - curTime)}s | 準點率: ${etaError}`;
                         $('stn-name').style.color = '#fff';
-                        if (Math.abs((next.time - curTime) - 15) < 0.25) { sfx.announce.play().catch(() => { }); triggerAI(`即將抵達：${next.name}`); }
-                        const prev = [...stations].reverse().find(s => s.time < curTime);
-                        if (prev && prev.closeTime) state.scheduleOffset = Math.floor((curTime - prev.closeTime) - (curTime - prev.time));
-                    } else {
-                        $('stn-name').textContent = '---'; $('stn-meta').textContent = '運轉中';
-                    }
-                }
 
-                // AI Auto-Discovery
-                if (state.currentSpeed === 0 && state.doorsOpen && !current && !state.autoDiscoverTimer) {
-                    state.autoDiscoverTimer = setTimeout(() => {
-                        if (state.currentSpeed === 0 && state.doorsOpen) {
-                            const name = `偵測站點 (${Math.floor(curTime)}s)`;
-                            if (!state.memory[state.videoId]) state.memory[state.videoId] = [];
-                            state.memory[state.videoId].push({ name, time: curTime, closeTime: curTime + 25 });
-                            state.memory[state.videoId].sort((a, b) => a.time - b.time);
-                            saveMemory(); triggerAI(`自動辨識並紀錄：${name}`);
+                        if (Math.abs((next.time - curTime) - 15) < 0.25) {
+                            sfx.announce.play().catch(() => { });
+                            triggerAI(`即將抵達 ${next.name}。請準備減速並對準 8 節車廂位置。`, 4000);
                         }
-                        state.autoDiscoverTimer = null;
-                    }, 5000);
+                    } else {
+                        $('stn-name').textContent = '---';
+                        $('stn-meta').textContent = '行駛中 / 準備接管';
+                    }
                 }
 
                 updateAutomation(curTime);
                 updatePhysics();
+
+                // ATS System
+                if (state.currentSpeed > 115) {
+                    if (!state.atsAlarm) {
+                        state.atsAlarm = true;
+                        triggerAI("🚨 ATS 警告：超速中！請立即減速至 110 以下，否則將觸發安全鎖定。", 4000);
+                    }
+                    if (state.currentSpeed > 125) {
+                        applyGear(0);
+                        triggerAI("🚨 ATS 介入：嚴重超速！強制執行 EB 緊急軔機。", 6000);
+                    }
+                } else {
+                    state.atsAlarm = false;
+                }
+
+                // AI Flavor Chat
+                if ($('chk-aichat').checked && Date.now() - state.lastAITalk > 45000 && state.currentSpeed > 40 && !currentStn) {
+                    const quotes = [
+                        "目前車輛狀態良好，馬達溫度正常。",
+                        "今日載客量預計處於離峰時段。",
+                        "提醒您，進入彎道前請注意適度降速。",
+                        "系統檢測中... 所有子系統運作正常。",
+                        "這段路徑的風景相當不錯，不是嗎？"
+                    ];
+                    triggerAI(quotes[Math.floor(Math.random() * quotes.length)], 5000);
+                    state.lastAITalk = Date.now();
+                }
+
+                // Keep players in sync
                 if (vState === 1 && aPlayer.getPlayerState() !== 1) aPlayer.playVideo();
                 if (vState === 2 && aPlayer.getPlayerState() !== 2) aPlayer.pauseVideo();
+
             }, 1000 / CONFIG.PHYSICS_HZ);
         }
 
         function updateAutomation(curTime) {
             const stations = state.memory[state.videoId] || [];
             const next = stations.find(s => s.time > curTime);
-            const current = stations.find(s => curTime >= s.time - 2 && curTime <= (s.closeTime || s.time + 30) + 2);
+            const current = stations.find(s => curTime >= s.time - 3 && curTime <= (s.closeTime || s.time + 30) + 3);
 
-            // 1. Auto Doors
+            // AUTO DOORS
             if ($('chk-autodoor').checked && current && !state.doorsOpen && state.currentSpeed === 0) {
-                setTimeout(() => { if (state.currentSpeed === 0) openDoors(); }, 1200);
+                setTimeout(() => { if (state.currentSpeed === 0) openDoors(); }, 1500);
             }
             if ($('chk-autodoor').checked && current && state.doorsOpen && current.closeTime && curTime > current.closeTime) {
                 closeDoors();
             }
 
-            // 2. ATO Departure
-            if ($('chk-ato').checked && !state.doorsOpen && state.currentGear === 5 && state.currentSpeed === 0 && !state.departTriggered) {
-                state.departTriggered = true;
-                triggerAI("AI：車門鎖定，準備發車。");
-                setTimeout(() => {
-                    if (!state.doorsOpen && state.currentSpeed === 0) applyGear(7);
-                    state.departTriggered = false;
-                }, 2000);
+            // AUTO DEPARTURE
+            if ($('chk-ato').checked && !state.doorsOpen && state.currentGear === 5 && state.currentSpeed === 0) {
+                if (!state.departTriggered) {
+                    state.departTriggered = true;
+                    triggerAI("AI 控制：車門已確認鎖閉，信號正常，準備發車。", 3000);
+                    setTimeout(() => {
+                        if (!state.doorsOpen && state.currentSpeed === 0) {
+                            applyGear(7);
+                            setTimeout(() => { state.departTriggered = false; }, 10000);
+                        } else {
+                            state.departTriggered = false;
+                        }
+                    }, 2000);
+                }
             }
 
-            // 3. TASC Braking
+            // TASC & Speed Guard
             if ($('chk-tasc').checked && next && !state.doorsOpen) {
-                const tt = next.time - curTime;
-                if (tt < 15 && state.currentSpeed > 60 && state.currentGear > 3) applyGear(3);
-                if (tt < 10 && state.currentSpeed > 40 && state.currentGear > 2) applyGear(2);
-                if (tt < 6 && state.currentSpeed > 20 && state.currentGear > 1) applyGear(1);
-                if (tt < 3 && state.currentSpeed > 5 && state.currentGear > 0) applyGear(0);
+                const timeToStop = next.time - curTime;
+
+                // Realistic TASC: Multi-stage braking
+                if (timeToStop < 20 && state.currentSpeed > 80 && state.currentGear > 4) applyGear(4); // B1
+                if (timeToStop < 15 && state.currentSpeed > 60 && state.currentGear > 3) applyGear(3); // B2
+                if (timeToStop < 10 && state.currentSpeed > 40 && state.currentGear > 2) applyGear(2); // B3
+                if (timeToStop < 6 && state.currentSpeed > 20 && state.currentGear > 1) applyGear(1);  // B4
+
+                // Emergency Safety
+                if (timeToStop < 4 && state.currentSpeed > 15 && state.currentGear > 0) {
+                    applyGear(0);
+                    if (!state.ebTriggered) {
+                        state.ebTriggered = true;
+                        triggerAI("❗ 緊急事件：進站速度過高！強制觸發 EB 緊急軔機以確保乘車安全。", 5000);
+                        setTimeout(() => { state.ebTriggered = false; }, 5000);
+                    }
+                }
             }
 
-            // 4. ATO Cruising
-            if ($('chk-ato').checked && !state.doorsOpen && next && (next.time - curTime) > 20) {
-                let cs = 95;
-                if (state.scheduleOffset > 5) cs = 110;
-                if (state.currentSpeed < cs - 5 && state.currentGear < 8) applyGear(8);
-                else if (state.currentSpeed > cs && state.currentGear !== 5) applyGear(5);
+            // ATO (Auto Pilot) Speed Control + Coasting Logic
+            if ($('chk-ato').checked && !state.doorsOpen) {
+                if (next) {
+                    const timeDiff = next.time - curTime;
+                    if (timeDiff > 25) {
+                        // High speed cruise (90-110)
+                        if (state.currentSpeed < 90) {
+                            state.isCoasting = false;
+                            const targetGear = state.currentSpeed < 40 ? 10 : 8; // P5 if slow, P3 if mid
+                            if (state.currentGear < targetGear) applyGear(targetGear);
+                        } else if (state.currentSpeed > 105) {
+                            state.isCoasting = true;
+                            if (state.currentGear !== 5) {
+                                applyGear(5); // Coast in N
+                                triggerAI("ATO：已達標航速。進入惰行模式（省電駕駛）。", 3000);
+                            }
+                        } else if (state.currentSpeed > 90 && !state.isCoasting) {
+                            // Stay in P1/P2 to maintain
+                            if (state.currentGear > 7) applyGear(7);
+                        }
+                    }
+                } else {
+                    // No more stations, cruise at 60
+                    if (state.currentSpeed < 60 && state.currentGear < 7) applyGear(7);
+                    if (state.currentSpeed > 65 && state.currentGear > 5) applyGear(5);
+                }
             }
         }
 
@@ -1272,44 +1330,15 @@
             hud.textContent = '車門開啟';
             if (state.currentGear > 5) applyGear(5);
 
-            // Smart Discovery logic (More Autonomous)
+            // Smart Discovery logic
             const stations = state.memory[state.videoId] || [];
             const existing = stations.find(s => Math.abs(s.time - curTime) < 40);
             if (existing) {
                 existing.time = curTime;
                 saveMemory();
             } else {
-                // If stopped for 8s at a new location, auto-add
-                if (!state.autoDiscoverTimer) {
-                    state.autoDiscoverTimer = setTimeout(() => {
-                        if (state.currentSpeed === 0 && state.doorsOpen) {
-                            const newIdx = (state.memory[state.videoId] || []).length + 1;
-                            const name = `偵測站點 #${newIdx}`;
-                            if (!state.memory[state.videoId]) state.memory[state.videoId] = [];
-                            state.memory[state.videoId].push({ name, time: curTime, closeTime: curTime + 20 });
-                            state.memory[state.videoId].sort((a, b) => a.time - b.time);
-                            saveMemory();
-                            triggerAI(`AI 分析：偵測到未知停留點，已自動配置為導航目標【${name}】。`, 5000);
-                        }
-                        state.autoDiscoverTimer = null;
-                    }, 8000);
-                }
-            }
-        }
-
-        // --- Video Detection & Cloud Logic ---
-        function checkCloudLibrary(id) {
-            if (ROUTE_LIBRARY[id]) {
-                const stations = ROUTE_LIBRARY[id];
-                if (!state.memory[id] || state.memory[id].length === 0) {
-                    state.memory[id] = JSON.parse(JSON.stringify(stations));
-                    saveMemory();
-                    triggerAI("☁️ 雲端資料同步：AI 已成功辨識此影片，路線導航參數已自動加載。", 5000);
-                } else {
-                    triggerAI("☁️ 雲端資料同步：本地已有導航資料，AI 將繼續維持現有配置。", 3000);
-                }
-            } else {
-                triggerAI("AI 提示：此影片不在雲端資料庫中。請手動停靠以觸發站點探索系統。", 4000);
+                $('smart-discovery').style.display = 'block';
+                triggerAI("偵測到新的停靠位置。是否要要求 AI 將其加入站點資料庫？");
             }
         }
 
@@ -1524,10 +1553,6 @@
             state.currentSpeed = 0;
             applyGear(5);
             hideModals();
-
-            // Re-check Cloud Library
-            setTimeout(() => checkCloudLibrary(state.videoId), 2000);
-
             refreshStationList();
         };
 
