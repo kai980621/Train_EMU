@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Tokyo Train Studio | Industrial EMU</title>
+    <style>
+        :root {
+            --bg: #05070a;
+            --glass: rgba(20, 25, 35, 0.7);
+            --accent: #00b4ff;
+            --accent-glow: rgba(0, 180, 255, 0.4);
+            --text: #e0e6ed;
+            --danger: #ff3b3b;
+            --safe: #00ff88;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            overflow: hidden;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            color: var(--text);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #visual-player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 1;
+        }
+
+        #audio-player-container {
+            position: absolute;
+            top: -999px;
+            left: -999px;
+        }
+
+        /* Industrial HUD */
+        #status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            border-bottom: 2px solid var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #status-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--safe);
+            margin-right: 12px;
+            box-shadow: 0 0 10px var(--safe);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(30px) saturate(160%);
+            -webkit-backdrop-filter: blur(30px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        #speedometer {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        #speed-value {
+            font-size: 80px;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -4px;
+            color: #fff;
+            text-shadow: 0 0 30px rgba(0, 180, 255, 0.4);
+        }
+
+        .speed-label {
+            font-size: 12px;
+            font-weight: 900;
+            opacity: 0.4;
+            letter-spacing: 4px;
+            margin-top: -5px;
+        }
+
+        /* Mascon V3 */
+        #mascon-v3 {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            width: 100px;
+            height: 320px;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #gear-indicator {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        #mascon-track {
+            flex: 1;
+            width: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        #mascon-handle {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 35px;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            transition: top 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        /* Door Status */
+        #door-indicator {
+            position: absolute;
+            top: 60px;
+            right: 30px;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            z-index: 10;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .door-open {
+            border-color: var(--safe) !important;
+            color: var(--safe) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Smart Learning UI */
+        #smart-toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+            width: 320px;
+        }
+
+        #startup-screen {
+            position: absolute;
+            inset: 0;
+            z-index: 2000;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .start-btn {
+            background: #fff;
+            color: #000;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+
+        #left-panel {
+            position: absolute;
+            left: 30px;
+            bottom: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .side-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            background: var(--glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: 0.2s;
+        }
+
+        .side-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+        }
+
+        /* Mobile Optimized Controls */
+        #mobile-ctrl-pad {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            transition: 0.1s;
+        }
+
+        .touch-btn:active {
+            background: var(--accent);
+            transform: scale(0.9);
+            border-color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            #mobile-ctrl-pad {
+                display: flex;
+            }
+
+            #left-panel {
+                bottom: 20px;
+                left: 15px;
+            }
+
+            #mascon-v3 {
+                right: 15px;
+                bottom: 20px;
+                scale: 0.9;
+            }
+
+            .side-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+
+            #speed-value {
+                font-size: 60px;
+            }
+        }
+
+        @media screen and (orientation: portrait) {
+            #landscape-warning {
+                display: flex;
+            }
+        }
+
+        /* Restored Layout Styles */
+        #station-v2 {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 280px;
+        }
+
+        #stn-name {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            text-shadow: 0 0 20px var(--accent-glow);
+            transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        #stn-dist {
+            font-size: 16px;
+            font-weight: 800;
+            font-family: monospace;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        #eval-modal {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 30px 60px;
+            display: none;
+            z-index: 1500;
+            text-align: center;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 50px var(--accent-glow);
+        }
+
+        #eval-grade {
+            font-size: 64px;
+            font-weight: 900;
+            color: gold;
+            margin: 10px 0;
+        }
+
+        #eval-diff {
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        #btn-prev-stn,
+        #btn-next-stn {
+            margin: 0;
+            z-index: 5000;
+        }
+
+        .jump-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--glass);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Route UI */
+        #route-manager {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: calc(100% - 40px);
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            display: none;
+            z-index: 5000;
+        }
+
+        @media (max-width: 900px) {
+            #route-manager {
+                width: calc(100% - 60px);
+                left: 30px;
+                right: 30px;
+            }
+
+            #jump-controls {
+                width: calc(100% - 240px);
+            }
+        }
+
+        .stn-table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 10px;
+            padding: 5px 10px;
+            font-size: 10px;
+            font-weight: 900;
+            opacity: 0.4;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stn-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 10px;
+            align-items: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 4px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stn-row input {
+            background: transparent !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 4px !important;
+            text-align: left !important;
+            font-size: 12px !important;
+            color: #fff !important;
+            cursor: text;
+            width: 100%;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: 900;
+            opacity: 0.5;
+            transition: 0.2s;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-radius: 6px;
+            outline: none;
+            margin: 10px 0;
+            font-family: inherit;
+            font-weight: 600;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="landscape-warning">
+        <div>
+            <div style="font-size: 40px; margin-bottom: 20px;">🔄</div>
+            <div style="font-weight: 800; letter-spacing: 2px;">ROTATE FOR LANDSCAPE</div>
+            <div style="font-size: 12px; opacity: 0.5; margin-top: 10px;">MOBILE OPTIMIZATION ACTIVE</div>
+        </div>
+    </div>
+
+    <div id="startup-screen">
+        <h1 style="letter-spacing: -3px; font-size: 48px; margin-bottom: 20px;">TRAIN STUDIO 2.3</h1>
+        <div style="font-size: 14px; opacity: 0.6; margin-bottom: 40px; letter-spacing: 2px;">SMART TRAINS PRO</div>
+        <button id="btn-master-start" class="start-btn" disabled>INITIALIZING ENGINE...</button>
+    </div>
+
+    <div id="visual-player-container"></div>
+    <div id="audio-player-container"></div>
+
+    <div id="app-container" style="display: none;">
+        <!-- Mobile Touch Pad -->
+        <div id="mobile-ctrl-pad">
+            <div class="touch-btn" onclick="handleAction('KeyQ')" style="border-color: var(--danger);">Q</div>
+            <div class="touch-btn" onclick="handleAction('KeyE')" style="border-color: var(--safe);">E</div>
+            <div class="touch-btn" onclick="handleAction('KeyX')" style="font-size: 18px; color: var(--accent);">SYNC
+            </div>
+        </div>
+        <!-- Status Notification Bar -->
+        <div id="status-bar">
+            <div id="status-led"></div>
+            <span id="system-msg">TRAIN SYSTEM ONLINE</span>
+            <div style="margin-left: auto; display: flex; gap: 15px; align-items: center;">
+                <span id="current-vid-info"
+                    style="color: var(--accent); font-size: 14px; font-weight: 900; background: rgba(0,180,255,0.1); padding: 4px 10px; border-radius: 4px;">TIME:
+                    0.0s</span>
+                <span id="system-clock" style="opacity: 0.7;">00:00:00</span>
+            </div>
+        </div>
+
+        <div id="station-v2">
+            <div id="stn-name">---</div>
+            <div id="stn-dist">EN ROUTE</div>
+        </div>
+
+        <div id="door-indicator">DOOR LOCKED</div>
+
+        <div id="eval-modal" class="glass-panel">
+            <div style="font-weight: 900; font-size: 14px; opacity: 0.6;">STOP EVALUATION</div>
+            <div id="eval-grade">EXCELLENT</div>
+            <div id="eval-diff">ERROR: 0.2m</div>
+        </div>
+
+        <!-- Smart Learning Logic UI -->
+        <div id="smart-toast" class="glass-panel"
+            style="position: absolute; top: 100px; left: 50%; transform: translateX(-50%); padding: 25px; display: none; z-index: 6000; text-align: center; width: 340px;">
+            <div style="font-weight: 900; margin-bottom: 8px; font-size: 18px; color: var(--accent);">STATION DISCOVERY
+            </div>
+            <div style="font-size: 11px; opacity: 0.6; margin-bottom: 15px;">ENTER NAME TO CREATE DATA LINK</div>
+            <input type="text" id="stn-input" placeholder="STATION NAME (e.g. SHINJUKU)" style="font-size:16px;">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="memorizeStation()"
+                    style="flex: 2; padding: 15px; background: var(--safe); color: #000; border: none; border-radius: 6px; font-weight: 900; cursor: pointer; font-size: 16px;">MEMORIZE</button>
+                <button onclick="hideSmartToast()"
+                    style="flex: 1; padding: 15px; background: rgba(255,255,255,0.1); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">SKIP</button>
+            </div>
+        </div>
+
+        <!-- Route Manager Overlay -->
+        <div id="route-manager" class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 20px; letter-spacing: -0.5px;">DATA BANK</h3>
+                <button onclick="document.getElementById('route-manager').style.display='none'" class="side-btn"
+                    style="width:40px; height:40px; font-size:18px;">X</button>
+            </div>
+
+            <button onclick="document.getElementById('smart-toast').style.display='block'"
+                style="width:100%; padding:15px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; font-weight:900; cursor:pointer; margin-bottom:15px; font-size:16px;">+
+                CREATE NEW STATION</button>
+
+            <div class="stn-table-header">
+                <span>STATION NAME</span>
+                <span>OPEN DOORS (S)</span>
+                <span>CLOSE DOORS (S)</span>
+                <span></span>
+            </div>
+            <div id="stn-list-container" style="margin-bottom: 20px; max-height: 250px; overflow-y: auto;">
+                <!-- Stations with Delete buttons listed here -->
+            </div>
+
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <div style="font-size: 11px; font-weight: 800; opacity: 0.5; margin-bottom: 10px;">ADVANCED DATA IMPORT
+                </div>
+                <textarea id="batch-input" placeholder='[{"name":"STATION","time":120,"closeTime":150},...]'
+                    style="width:100%; height:60px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:monospace; padding:10px; font-size:10px; outline:none;"></textarea>
+                <button id="btn-import" onclick="importBatch()"
+                    style="width:100%; padding:10px; background:rgba(255,255,255,0.1); border:none; border-radius:6px; color:#fff; font-weight:800; cursor:pointer; margin-top:10px; font-size:12px;">INJECT
+                    DATA</button>
+                <button onclick="clearAllStations()"
+                    style="width:100%; padding:10px; background:rgba(255,0,0,0.1); border:none; border-radius:6px; color:var(--danger); font-weight:800; cursor:pointer; margin-top:5px; font-size:12px;">WIPE
+                    ALL DATA</button>
+            </div>
+        </div>
+
+        <div id="left-panel">
+            <div class="side-btn" id="btn-fullscreen">⛶</div>
+            <div class="side-btn" id="btn-change-video">🎞</div>
+            <div class="side-btn" id="btn-toggle-route">🗺</div>
+            <div class="side-btn" id="btn-pause">⏸</div>
+            <div class="side-btn" id="btn-help"
+                style="background: var(--accent); color: #000; font-weight: 900; width: 64px; height: 64px; border-radius: 18px; font-size: 28px;">
+                ?</div>
+        </div>
+
+        <div id="help-modal" class="glass-panel"
+            style="display: none; position: absolute; top: 100px; left: 30px; width: 340px; padding: 25px; z-index: 6000; font-size: 14px; line-height: 1.8;">
+            <h3 style="margin: 0 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px;">SYSTEM MANUAL
+            </h3>
+            <b>[Z]</b> ACCEL / <b>[S]</b> BRAKE<br>
+            <b>[A]</b> NEUTRAL / <b>[X]</b> RE-SYNC<br>
+            <b>[Q], [E], or [SPACE]</b> TOGGLE DOORS<br>
+            <hr style="opacity: 0.1; margin: 15px 0;">
+            <b>SMART DISCOVERY & DOORS:</b><br>
+            Use <b>DOORS</b> button to open automatically. Future uses will Auto-Update the timings for you!
+            <button onclick="document.getElementById('help-modal').style.display='none'" class="start-btn"
+                style="width:100%; margin-top:15px; font-size:14px; padding:10px;">DISMISS</button>
+        </div>
+
+        <!-- Station Jump Popup Menu -->
+        <div id="jump-menu-modal" class="glass-panel"
+            style="display: none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 340px; padding: 25px; z-index: 7000;">
+            <h3 id="jump-menu-title"
+                style="margin: 0 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px;">SELECT STATION
+            </h3>
+            <div id="jump-menu-list"
+                style="display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; margin-bottom: 15px;">
+            </div>
+            <button onclick="document.getElementById('jump-menu-modal').style.display='none'" class="start-btn"
+                style="width:100%; font-size:14px; padding:10px;">CANCEL</button>
+        </div>
+
+        <div id="speedometer">
+            <div class="speed-label">KILOMETERS PER HOUR</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 30px; margin-top: 5px;">
+                <div id="btn-prev-stn" class="jump-btn" onclick="openJumpMenu(-1)">⏮</div>
+                <div id="speed-value">0</div>
+                <div id="btn-next-stn" class="jump-btn" onclick="openJumpMenu(1)">⏭</div>
+            </div>
+        </div>
+
+        <div id="mascon-v3" class="glass-panel">
+            <div id="gear-indicator">N</div>
+            <div id="mascon-track">
+                <div id="mascon-handle">N</div>
+            </div>
+            <div style="font-size: 10px; font-weight: 900; opacity: 0.3; margin-top: 10px; letter-spacing: 2px;">MASCON
+                V3</div>
+        </div>
+
+        <!-- Video Selector Overlay -->
+        <div id="video-overlay" class="glass-panel"
+            style="position: absolute; top: 60px; left: 30px; padding: 25px; width: 340px; display: none; z-index: 500;">
+            <div style="font-weight: 900; margin-bottom: 20px; font-size: 18px; color:var(--accent);">VIDEO LINK CENTER
+            </div>
+            <input type="text" id="video-input" placeholder="PASTE YOUTUBE URL HERE"
+                style="text-align: left; padding: 12px; margin-bottom: 10px; width:100%;">
+
+            <div id="video-info-preview"
+                style="display:none; padding: 15px; background: rgba(0,0,0,0.4); border-radius:6px; margin-bottom: 15px; border-left: 3px solid var(--accent);">
+                <div style="font-size: 10px; opacity:0.5; margin-bottom: 5px;">VERIFIED TITLE:</div>
+                <div id="video-check-title" style="font-size: 13px; font-weight: 800;">---</div>
+            </div>
+
+            <button id="btn-check-title"
+                style="width: 100%; padding:12px; border:none; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; font-weight:800; cursor:pointer; margin-bottom:10px;">FETCH
+                VIDEO INFO</button>
+            <button id="btn-load-link" class="start-btn"
+                style="width: 100%; border-radius: 6px; background: var(--accent); color: #fff; display:none;">LINK &
+                INITIALIZE</button>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        // === Core Engine (LTS 1.2 Enhanced) ===
+        let visualPlayer = null, audioPlayer = null;
+        let apiReady = false, isStarted = false, isPaused = false, isSeeking = false;
+        let doorTimer = null, audioTimer = null;
+        let isAutoPaused = false, visualAutoPaused = false;
+        let currentVideoId = 'TpxTlO68CWI';
+        let pGearLocked = true, currentSpeed = 0, currentGearId = 5;
+        let lastSetRate = -1, syncCheckInterval = null;
+
+        // === Smart Memory Logic ===
+        let memory = JSON.parse(localStorage.getItem('emu_memory_v2') || '{}');
+        let stopStartTime = null, evalShown = false;
+
+        const platformAnnounce = new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg');
+        const doorOpenSFX = new Audio('https://commons.wikimedia.org/wiki/File:Voice_of_door_opening_on_Nanjing-Chuzhou_Line_Train.ogg');
+        const doorCloseSFX = new Audio('https://commons.wikimedia.org/wiki/File:Voice_of_Door_Opening_in_Nanjing_Metro_Line_S1_Train,_Jul_2_2023.ogg');
+
+        const GEARS = [
+            { id: 0, name: 'EB', decel: 30.0, color: '#ff3333' }, { id: 1, name: 'B4', decel: 15.0, color: '#ff6633' },
+            { id: 2, name: 'B3', decel: 10.0, color: '#ff9933' }, { id: 3, name: 'B2', decel: 5.0, color: '#ffcc33' },
+            { id: 4, name: 'B1', decel: 2.5, color: '#ffff33' }, { id: 5, name: 'N', decel: 0.15, color: '#fff' },
+            { id: 6, name: 'P1', accel: 1.2, color: '#33ffcc' }, { id: 7, name: 'P2', accel: 1.8, color: '#33ff99' },
+            { id: 8, name: 'P3', accel: 2.5, color: '#33ff66' }, { id: 9, name: 'P4', accel: 4.0, color: '#33ff33' },
+            { id: 10, name: 'P5', accel: 8.0, color: '#00ff00' }
+        ];
+
+        function log(msg, urgent = false) {
+            const el = document.getElementById('system-msg');
+            el.textContent = msg.toUpperCase();
+            el.style.color = urgent ? 'var(--danger)' : 'var(--accent)';
+        }
+
+        function onYouTubeIframeAPIReady() {
+            apiReady = true;
+            const btn = document.getElementById('btn-master-start');
+            btn.textContent = 'SYSTEMS ONLINE'; btn.disabled = false;
+        }
+
+        function launchSimulator() {
+            const playerVars = { 'autoplay': 1, 'controls': 0, 'disablekb': 1, 'fs': 0, 'modestbranding': 1, 'rel': 0, 'showinfo': 0, 'iv_load_policy': 3, 'playsinline': 1, 'enablejsapi': 1 };
+            visualPlayer = new YT.Player('visual-player-container', { videoId: currentVideoId, playerVars, events: { 'onReady': onEngineReady, 'onStateChange': onEngineStateChange } });
+            audioPlayer = new YT.Player('audio-player-container', { videoId: currentVideoId, playerVars, events: { 'onReady': onEngineReady } });
+        }
+
+        let readyCount = 0;
+        function onEngineReady() {
+            readyCount++;
+            if (readyCount >= 2) {
+                visualPlayer.mute(); audioPlayer.unMute();
+                document.getElementById('startup-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                isStarted = true;
+                updateMasconUI();
+                startEngineLoop();
+            }
+        }
+
+        function onEngineStateChange(e) { if (e.data === YT.PlayerState.ENDED) visualPlayer.seekTo(0); }
+
+        function startEngineLoop() {
+            if (syncCheckInterval) clearInterval(syncCheckInterval);
+            refreshStnList();
+
+            syncCheckInterval = setInterval(() => {
+                if (!isStarted || isPaused || isSeeking) return;
+
+                const now = new Date();
+                document.getElementById('system-clock').textContent = now.toTimeString().split(' ')[0];
+
+                const time = Math.floor(visualPlayer.getCurrentTime());
+                const exactTime = visualPlayer.getCurrentTime();
+
+                // Display absolute video seconds for manual editing
+                document.getElementById('current-vid-info').textContent = `TIME: ${exactTime.toFixed(1)}s`;
+
+                const vidStations = memory[currentVideoId] || [];
+                // Stay at the 'current station' until doors are completely closed + a small buffer
+                const currentSTN = vidStations.find(s => exactTime >= s.time - 3 && exactTime <= (s.closeTime || s.time + 30) + 3);
+
+                if (currentSTN) {
+                    document.getElementById('stn-name').textContent = currentSTN.name;
+                    document.getElementById('stn-dist').textContent = "--- ARRIVED ---";
+                    document.getElementById('stn-name').style.color = 'var(--accent)';
+                    if (currentSpeed === 0 && pGearLocked && !evalShown) evaluateStop(Math.abs(exactTime - currentSTN.time));
+                } else {
+                    evalShown = false;
+                    const nextSTN = vidStations.find(s => s.time > time);
+                    if (nextSTN) {
+                        document.getElementById('stn-name').textContent = nextSTN.name;
+                        const dist = Math.max(0, Math.floor((nextSTN.time - exactTime) * 16.6) - 1);
+                        document.getElementById('stn-dist').textContent = `DIST: ${dist}m | T-${Math.ceil(nextSTN.time - exactTime)}s`;
+                        document.getElementById('stn-name').style.color = '#fff';
+
+                        // Broadcast Trigger Logic - Fixed at 15s
+                        if (Math.abs((nextSTN.time - exactTime) - 15) < 0.2) {
+                            if (platformAnnounce.paused) platformAnnounce.play().catch(() => { });
+                        }
+                    } else {
+                        document.getElementById('stn-name').textContent = "---";
+                        document.getElementById('stn-dist').textContent = "EN ROUTE";
+                    }
+                }
+
+                if (pGearLocked) {
+                    const activeStn = vidStations.find(s => Math.abs(s.time - exactTime) < 60);
+                    if (activeStn && activeStn.closeTime && activeStn.closeTime > exactTime) {
+                        document.getElementById('door-indicator').textContent = `OPEN [ CLOSE IN ${Math.ceil(activeStn.closeTime - exactTime)}s ]`;
+                    } else {
+                        document.getElementById('door-indicator').textContent = `OPEN [ ${Math.floor(exactTime)}s ]`;
+                    }
+                } else if (document.getElementById('door-indicator').textContent !== 'DOOR LOCKED') {
+                    document.getElementById('door-indicator').textContent = 'DOOR LOCKED';
+                }
+
+                if (!isAutoPaused && !visualAutoPaused) {
+                    if (visualPlayer.getPlayerState() !== 1) visualPlayer.playVideo();
+                    if (audioPlayer.getPlayerState() !== 1) audioPlayer.playVideo();
+                }
+                if (!isAutoPaused) updatePhysics();
+            }, 200);
+        }
+
+        function refreshStnList() {
+            const container = document.getElementById('stn-list-container');
+            const vidStations = memory[currentVideoId] || [];
+            if (vidStations.length === 0) {
+                container.innerHTML = `<div style="opacity: 0.5; text-align: center; padding: 20px; font-size: 12px;">NO MEMORY DATA</div>`;
+                return;
+            }
+            container.innerHTML = vidStations.map((s, idx) => `
+                <div class="stn-row">
+                    <input type="text" value="${s.name}" onchange="saveStation(${idx}, 'name', this.value)">
+                    <input type="number" value="${Math.floor(s.time)}" onchange="saveStation(${idx}, 'time', this.value)">
+                    <input type="number" value="${s.closeTime ? Math.floor(s.closeTime) : ''}" placeholder="--" onchange="saveStation(${idx}, 'closeTime', this.value)">
+                    <button class="delete-btn" onclick="deleteStation(${idx})">X</button>
+                </div>
+            `).join('');
+        }
+
+        function saveStation(idx, field, val) {
+            const v = (field === 'name') ? val : parseFloat(val);
+            memory[currentVideoId][idx][field] = v;
+            if (field === 'time') memory[currentVideoId].sort((a, b) => a.time - b.time);
+            localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+            refreshStnList();
+        }
+
+        function deleteStation(idx) {
+            memory[currentVideoId].splice(idx, 1);
+            localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+            refreshStnList();
+        }
+
+        function clearAllStations() {
+            if (confirm("WIPE ALL ROUTE DATA FOR THIS VIDEO?")) {
+                memory[currentVideoId] = [];
+                localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                refreshStnList();
+            }
+        }
+
+        function evaluateStop(diff) {
+            evalShown = true;
+            const modal = document.getElementById('eval-modal');
+            const grade = document.getElementById('eval-grade');
+            const diffEl = document.getElementById('eval-diff');
+
+            let text = "POOR", color = "var(--danger)";
+            const dist = Math.abs(diff * 16.6).toFixed(1);
+
+            if (diff < 0.3) { text = "EXCELLENT"; color = "gold"; }
+            else if (diff < 1.0) { text = "GREAT"; color = "var(--safe)"; }
+            else if (diff < 3.0) { text = "GOOD"; color = "var(--accent)"; }
+
+            grade.textContent = text; grade.style.color = color;
+            diffEl.textContent = `ERROR: ${dist}m (${diff.toFixed(2)}s)`;
+            modal.style.display = 'block';
+            setTimeout(() => { modal.style.opacity = '0'; setTimeout(() => { modal.style.display = 'none'; modal.style.opacity = '1'; }, 1000); }, 3000);
+        }
+
+        function openJumpMenu(offset) {
+            const time = visualPlayer.getCurrentTime();
+            const vidStations = memory[currentVideoId] || [];
+            let list = [];
+
+            if (offset > 0) {
+                document.getElementById('jump-menu-title').textContent = "JUMP TO NEXT";
+                list = vidStations.filter(s => s.time > time + 5);
+            } else {
+                document.getElementById('jump-menu-title').textContent = "JUMP TO PREVIOUS";
+                list = [...vidStations].filter(s => s.time < time - 5).reverse();
+            }
+
+            const container = document.getElementById('jump-menu-list');
+            if (list.length === 0) {
+                container.innerHTML = `<div style="opacity: 0.5; text-align: center;">NO STATIONS FOUND</div>`;
+            } else {
+                container.innerHTML = list.map(s => `
+                    <button onclick="executeJump(${s.time})" style="padding: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-weight: 800; text-align: left; cursor: pointer; border-radius: 6px; font-size: 16px;">
+                        ${s.name} <span style="float: right; opacity: 0.5;">${Math.floor(s.time / 60)}:${Math.floor(s.time % 60).toString().padStart(2, '0')}</span>
+                    </button>
+                `).join('');
+            }
+            document.getElementById('jump-menu-modal').style.display = 'block';
+        }
+
+        function executeJump(targetTime) {
+            document.getElementById('jump-menu-modal').style.display = 'none';
+            currentSpeed = 0; applyGear(5); // Stop physics before jumping
+            visualPlayer.seekTo(targetTime, true);
+            audioPlayer.seekTo(targetTime, true);
+            log(`JUMPED TO STATION`);
+        }
+
+        function importBatch() {
+            try {
+                const data = JSON.parse(document.getElementById('batch-input').value);
+                if (Array.isArray(data)) {
+                    memory[currentVideoId] = data;
+                    localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                    refreshStnList();
+                    log("ROUTE IMPORTED SUCCESSFULLY");
+                }
+            } catch (e) { log("IMPORT FAILED: INVALID JSON", true); }
+        }
+
+        function updatePhysics() {
+            const gear = GEARS[currentGearId];
+            let delta = (gear.accel || 0) - (gear.decel || 0);
+            if (currentGearId === 5) delta = -0.15; // Natural Friction
+
+            currentSpeed += delta * 0.2;
+            if (currentSpeed < 0.1) currentSpeed = 0;
+            currentSpeed = Math.min(140, currentSpeed);
+
+            if (visualPlayer && visualPlayer.setPlaybackRate) {
+                let rate = pGearLocked ? 1.0 : (0.5 + currentSpeed * 0.025);
+                rate = Math.max(0.5, Math.min(2.0, Math.round(rate * 10) / 10));
+                if (rate !== lastSetRate) {
+                    visualPlayer.setPlaybackRate(rate);
+                    lastSetRate = rate;
+                }
+            }
+
+            document.getElementById('speed-value').textContent = Math.floor(currentSpeed);
+            document.getElementById('speed-value').style.color = gear.color;
+
+            // Power-Save Auto Pause
+            if (currentSpeed === 0 && !pGearLocked && !isAutoPaused && !visualAutoPaused && !doorTimer) {
+                doorTimer = setTimeout(() => {
+                    if (currentSpeed === 0 && !pGearLocked) {
+                        visualAutoPaused = true; visualPlayer.pauseVideo();
+                        log("STOPPED - STANDBY MODE", true);
+                    }
+                }, 5000);
+                audioTimer = setTimeout(() => {
+                    if (currentSpeed === 0 && !pGearLocked) {
+                        isAutoPaused = true; audioPlayer.pauseVideo();
+                        log("STOPPED - FULL SHUTDOWN", true);
+                    }
+                }, 10000);
+            }
+        }
+
+        function memorizeStation() {
+            const name = document.getElementById('stn-input').value.trim() || 'STATION';
+            const exactTime = visualPlayer.getCurrentTime();
+
+            if (!memory[currentVideoId]) memory[currentVideoId] = [];
+            memory[currentVideoId].push({ name, time: exactTime, closeTime: exactTime + 20 });
+            memory[currentVideoId].sort((a, b) => a.time - b.time);
+            localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+            document.getElementById('stn-input').value = "";
+            refreshStnList();
+            hideSmartToast(); log(`${name} MEMORIZED AND UPDATED`);
+            if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
+        }
+
+        function hideSmartToast() { document.getElementById('smart-toast').style.display = 'none'; }
+
+        function applyGear(idx) {
+            currentGearId = idx;
+            if (navigator.vibrate) navigator.vibrate(20);
+            updateMasconUI();
+            if (currentGearId > 5) {
+                clearTimeout(doorTimer); clearTimeout(audioTimer);
+                doorTimer = null; audioTimer = null;
+                isAutoPaused = false; visualAutoPaused = false;
+                visualPlayer.playVideo(); audioPlayer.playVideo();
+                log("DEPARTURE INITIALIZED");
+            }
+        }
+
+        function updateMasconUI() {
+            const gear = GEARS[currentGearId];
+            const handle = document.getElementById('mascon-handle');
+            handle.style.top = `${((10 - currentGearId) / 10) * 100}%`;
+            handle.textContent = gear.name;
+            document.getElementById('gear-indicator').textContent = gear.name;
+            document.getElementById('gear-indicator').style.color = gear.color;
+        }
+
+        function handleAction(code) {
+            if (!isStarted || isPaused) return;
+            const ind = document.getElementById('door-indicator');
+
+            // Single Button UI toggles doors dynamically
+            if (code === 'KeyE' || code === 'KeyQ' || code === 'ToggleDoors' || code === 'Space') {
+                if (currentSpeed > 0) return; // Prevent door operations while moving
+
+                // CLOSE DOORS
+                if (code === 'KeyE' || ((code === 'ToggleDoors' || code === 'Space') && pGearLocked)) {
+                    doorCloseSFX.play().catch(() => { });
+                    pGearLocked = false;
+                    ind.className = ''; ind.textContent = 'DOOR LOCKED';
+                    log("READY FOR DEPARTURE");
+
+                    const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Close Time For Active Station
+                    const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 60);
+                    if (stn) {
+                        stn.closeTime = exactTime;
+                        localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                        refreshStnList();
+                        log(`${stn.name} CLOSE TIME UPDATED`);
+                    }
+                }
+                // OPEN DOORS
+                else if (code === 'KeyQ' || ((code === 'ToggleDoors' || code === 'Space') && !pGearLocked)) {
+                    doorOpenSFX.play().catch(() => { });
+                    pGearLocked = true;
+                    ind.className = 'door-open'; ind.textContent = 'DOOR OPEN';
+                    if (currentGearId > 5) applyGear(5);
+                    log("DOOR OPERATIONS ACTIVE");
+
+                    const exactTime = visualPlayer.getCurrentTime();
+                    if (Math.abs(exactTime - audioPlayer.getCurrentTime()) > 0.5) {
+                        audioPlayer.seekTo(exactTime, true);
+                        log("A/V RESYNCED");
+                    }
+
+                    // Auto-Update Open Time OR Prompt for New Station
+                    const stn = memory[currentVideoId]?.find(s => Math.abs(s.time - exactTime) < 40);
+                    if (stn) {
+                        stn.time = exactTime;
+                        localStorage.setItem('emu_memory_v2', JSON.stringify(memory));
+                        refreshStnList();
+                        log(`${stn.name} OPEN TIME UPDATED`);
+                    } else {
+                        document.getElementById('smart-toast').style.display = 'block';
+                    }
+                }
+            } else if (code === 'KeyZ') {
+                if (pGearLocked) log("CLEAR DOORS BEFORE START", true);
+                else applyGear(Math.min(10, currentGearId + 1));
+            } else if (code === 'KeyS') {
+                applyGear(Math.max(0, currentGearId - 1));
+            } else if (code === 'KeyA') {
+                applyGear(5);
+            } else if (code === 'KeyX') {
+                audioPlayer.seekTo(visualPlayer.getCurrentTime(), true);
+                log("AV SYNC ALIGNED");
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('btn-master-start').addEventListener('click', launchSimulator);
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName !== 'INPUT') handleAction(e.code);
+        });
+
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        });
+        document.getElementById('btn-toggle-route').addEventListener('click', () => {
+            const el = document.getElementById('route-manager');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('btn-help').addEventListener('click', () => {
+            const el = document.getElementById('help-modal');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) { visualPlayer.pauseVideo(); audioPlayer.pauseVideo(); }
+            else { visualPlayer.playVideo(); audioPlayer.playVideo(); }
+        });
+        document.getElementById('btn-change-video').addEventListener('click', () => {
+            const el = document.getElementById('video-overlay');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Advanced Video Link Flow
+        let pendingVideoId = null;
+        document.getElementById('btn-check-title').addEventListener('click', async () => {
+            let val = document.getElementById('video-input').value.trim();
+            const m = val.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+            if (!m) { log("INVALID URL", true); return; }
+            const vid = m[1];
+
+            document.getElementById('btn-check-title').textContent = "FETCHING...";
+            try {
+                // Fetch from oEmbed
+                const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${vid}&format=json`);
+                const data = await response.json();
+                pendingVideoId = vid;
+                document.getElementById('video-check-title').textContent = data.title;
+                document.getElementById('video-info-preview').style.display = 'block';
+                document.getElementById('btn-load-link').style.display = 'block';
+                document.getElementById('btn-check-title').style.display = 'none';
+                log("VIDEO VERIFIED");
+            } catch (e) {
+                log("FETCH FAILED", true);
+                document.getElementById('btn-check-title').textContent = "FETCH VIDEO INFO";
+            }
+        });
+
+        document.getElementById('btn-load-link').addEventListener('click', () => {
+            if (!pendingVideoId) return;
+            currentVideoId = pendingVideoId;
+            visualPlayer.loadVideoById(currentVideoId);
+            audioPlayer.loadVideoById(currentVideoId);
+            currentSpeed = 0; applyGear(5);
+            evalShown = false; stopStartTime = null;
+            document.getElementById('video-overlay').style.display = 'none';
+            document.getElementById('video-info-preview').style.display = 'none';
+            document.getElementById('btn-load-link').style.display = 'none';
+            document.getElementById('btn-check-title').style.display = 'block';
+            document.getElementById('btn-check-title').textContent = "FETCH VIDEO INFO";
+            refreshStnList(); log("DATA LINK REFRESHED");
+        });
+
+        // Mascon Interactivity
+        const track = document.getElementById('mascon-track');
+        track.addEventListener('pointerdown', (e) => {
+            const move = (ev) => {
+                const rect = track.getBoundingClientRect();
+                const p = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
+                applyGear(10 - Math.round(p * 10));
+            };
+            move(e);
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', () => window.removeEventListener('pointermove', move), { once: true });
+        });
+    </script>
+</body>
+
+</html>
