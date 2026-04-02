@@ -806,13 +806,14 @@
     </div>
 
     <div id="startup-layer">
-        <div class="logo-v">EDGERAIL</div>
+        <div class="logo">KAI</div>
+        <div class="logo-v">TRAINSTUDIO</div>
         <div style="font-family: var(--font-mono); font-size: 12px; letter-spacing: 4px; color: var(--text-dim);">
-            專業電聯車模擬器 V2.5</div>
+            專業電聯車模擬器 V3.0 BETA AI</div>
         <button id="btn-master-launch" class="launch-btn" disabled>系統初始化中...</button>
         <div id="startup-log"
             style="margin-top: 20px; font-size: 11px; font-family: var(--font-mono); color: var(--accent); opacity: 0.7;">
-            CORE_ENGINE_V2.5 載入中</div>
+            CORE_ENGINE_V3.0 BETA AI 載入中</div>
     </div>
 
     <div id="visual-player-container"></div>
@@ -1012,6 +1013,35 @@
         <div id="jump-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
     </div>
 
+    <script>
+        const $ = id => document.getElementById(id);
+        const log = (msg, level = 'info') => {
+            const colors = { info: 'var(--accent)', error: 'var(--danger)', warn: 'var(--warning)' };
+            if ($('startup-log')) {
+                $('startup-log').textContent = msg.toUpperCase();
+                $('startup-log').style.color = colors[level];
+            }
+        };
+
+        // --- Critical Initialization ---
+        window.onYouTubeIframeAPIReady = function () {
+            if (state) state.apiReady = true;
+            if ($('btn-master-launch')) {
+                $('btn-master-launch').disabled = false;
+                $('btn-master-launch').textContent = 'INITIALIZE COCKPIT';
+                log('CORE_SYSTEM READY', 'info');
+            }
+        };
+
+        // Safety Fallback (If API is blocked/slow)
+        setTimeout(() => {
+            if ($('btn-master-launch') && $('btn-master-launch').disabled) {
+                $('btn-master-launch').disabled = false;
+                $('btn-master-launch').textContent = 'INITIALIZE COCKPIT (MANUAL)';
+                log('CORE_SYSTEM READY (FALLBACK)', 'warn');
+            }
+        }, 5000);
+    </script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         // --- Core Engine Configuration ---
@@ -1045,20 +1075,35 @@
             ]
         };
 
-        const $ = id => document.getElementById(id);
-        const log = (msg, level = 'info') => {
-            const colors = { info: 'var(--accent)', error: 'var(--danger)', warn: 'var(--warning)' };
-            if ($('startup-log')) {
-                $('startup-log').textContent = msg.toUpperCase();
-                $('startup-log').style.color = colors[level];
-            }
+
+        let state = {
+            isStarted: false,
+            isPaused: false,
+            currentSpeed: 0,
+            currentGear: 5,
+            doorsOpen: false,
+            videoId: 'TpxTlO68CWI',
+            apiReady: false,
+            playersReady: 0,
+            memory: JSON.parse(localStorage.getItem('edgerail_st_v3') || '{}'),
+            lastRate: 1,
+            evalShown: false,
+            scheduleOffset: 0,
+            aiVoiceEnabled: true,
+            aiTimer: null,
+            autoDiscoverTimer: null,
+            departTriggered: false,
+            standbyTimer: null,
+            standbyActive: false
         };
 
-        function onYouTubeIframeAPIReady() {
-            state.apiReady = true;
-            $('btn-master-launch').disabled = false;
-            $('btn-master-launch').textContent = 'INITIALIZE COCKPIT';
-        }
+        let vPlayer, aPlayer;
+        const sfx = {
+            announce: new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg'),
+            doorIn: new Audio('https://od.lk/s/OTFfMzg1ODI4MTVf/door_open.mp3'),
+            doorOut: new Audio('https://od.lk/s/OTFfMzg1ODI4MTZf/door_close.mp3')
+        };
+
 
         $('btn-master-launch').onclick = () => {
             document.body.requestFullscreen().catch(() => { });

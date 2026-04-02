@@ -1013,6 +1013,35 @@
         <div id="jump-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
     </div>
 
+    <script>
+        const $ = id => document.getElementById(id);
+        const log = (msg, level = 'info') => {
+            const colors = { info: 'var(--accent)', error: 'var(--danger)', warn: 'var(--warning)' };
+            if ($('startup-log')) {
+                $('startup-log').textContent = msg.toUpperCase();
+                $('startup-log').style.color = colors[level];
+            }
+        };
+
+        // --- Critical Initialization ---
+        window.onYouTubeIframeAPIReady = function () {
+            if (state) state.apiReady = true;
+            if ($('btn-master-launch')) {
+                $('btn-master-launch').disabled = false;
+                $('btn-master-launch').textContent = 'INITIALIZE COCKPIT';
+                log('CORE_SYSTEM READY', 'info');
+            }
+        };
+
+        // Safety Fallback (If API is blocked/slow)
+        setTimeout(() => {
+            if ($('btn-master-launch') && $('btn-master-launch').disabled) {
+                $('btn-master-launch').disabled = false;
+                $('btn-master-launch').textContent = 'INITIALIZE COCKPIT (MANUAL)';
+                log('CORE_SYSTEM READY (FALLBACK)', 'warn');
+            }
+        }, 5000);
+    </script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         // --- Core Engine Configuration ---
@@ -1046,20 +1075,35 @@
             ]
         };
 
-        const $ = id => document.getElementById(id);
-        const log = (msg, level = 'info') => {
-            const colors = { info: 'var(--accent)', error: 'var(--danger)', warn: 'var(--warning)' };
-            if ($('startup-log')) {
-                $('startup-log').textContent = msg.toUpperCase();
-                $('startup-log').style.color = colors[level];
-            }
+
+        let state = {
+            isStarted: false,
+            isPaused: false,
+            currentSpeed: 0,
+            currentGear: 5,
+            doorsOpen: false,
+            videoId: 'TpxTlO68CWI',
+            apiReady: false,
+            playersReady: 0,
+            memory: JSON.parse(localStorage.getItem('edgerail_st_v3') || '{}'),
+            lastRate: 1,
+            evalShown: false,
+            scheduleOffset: 0,
+            aiVoiceEnabled: true,
+            aiTimer: null,
+            autoDiscoverTimer: null,
+            departTriggered: false,
+            standbyTimer: null,
+            standbyActive: false
         };
 
-        function onYouTubeIframeAPIReady() {
-            state.apiReady = true;
-            $('btn-master-launch').disabled = false;
-            $('btn-master-launch').textContent = 'INITIALIZE COCKPIT';
-        }
+        let vPlayer, aPlayer;
+        const sfx = {
+            announce: new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg'),
+            doorIn: new Audio('https://od.lk/s/OTFfMzg1ODI4MTVf/door_open.mp3'),
+            doorOut: new Audio('https://od.lk/s/OTFfMzg1ODI4MTZf/door_close.mp3')
+        };
+
 
         $('btn-master-launch').onclick = () => {
             document.body.requestFullscreen().catch(() => { });
