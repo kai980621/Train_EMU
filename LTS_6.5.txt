@@ -564,8 +564,7 @@
             max-height: 80vh;
             padding: 32px;
             display: none;
-            z-index: 20000;
-            /* Increased to be above startup layer */
+            z-index: 20000; /* Increased to be above startup layer */
             overflow-y: auto;
             pointer-events: auto;
         }
@@ -1093,7 +1092,7 @@
         </div>
 
         <div class="logo-v">EDGERAIL</div>
-        <div class="logo-sub">Version 6.5 Professional</div>
+        <div class="logo-sub">Version 6.0 Professional</div>
 
         <button id="btn-master-launch" class="launch-btn" disabled>INITIALIZING SYSTEM...</button>
 
