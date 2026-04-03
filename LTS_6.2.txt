@@ -1314,7 +1314,7 @@
                     if (state.targetIndex === -1 || state.targetIndex >= stations.length) {
                         state.targetIndex = stations.findIndex(s => s.time > curTime - 5);
                         if (state.targetIndex === -1) state.targetIndex = stations.length - 1;
-
+                        
                         const stn = stations[state.targetIndex];
                         if (stn) {
                             state.baseDist = (stn.time - curTime) * 16.6;
