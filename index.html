@@ -1291,7 +1291,7 @@
                     $('startup-layer').style.display = 'none';
                     $('hud-layer').style.display = 'block';
                     state.isStarted = true;
-                    openDoors();
+                    openDoors(true);
                     updateMasconUI();
                     startEngineLoop();
                 }, 800);
@@ -1497,7 +1497,7 @@
             }
         }
 
-        function openDoors() {
+        function openDoors(skipDiscovery = false) {
             const curTime = vPlayer.getCurrentTime();
             state.doorsOpen = true;
             state.doorCloseTime = 0;
@@ -1528,7 +1528,7 @@
                 stn.time = curTime;
                 state.targetIndex = idx;
                 saveMemory();
-            } else if (!stations.find(s => Math.abs(s.time - curTime) < 40)) {
+            } else if (!skipDiscovery && !stations.find(s => Math.abs(s.time - curTime) < 40)) {
                 $('smart-discovery').style.display = 'block';
                 $('new-stn-name').value = "";
                 $('new-stn-name').focus();
@@ -1801,12 +1801,13 @@
             vPlayer.loadVideoById(state.videoId);
             aPlayer.loadVideoById(state.videoId);
             state.currentSpeed = 0;
+            state.targetIndex = -1; // Reset target on new video
+            if (!state.memory[state.videoId]) state.memory[state.videoId] = [];
+            $('stn-name').textContent = '---'; // Force UI update
+            $('stn-meta').textContent = '讀取中...';
             state.doorsOpen = true;
-            openDoors();
+            openDoors(true); // skip discovery popup
             hideModals();
-
-            // Re-check Cloud Library
-            setTimeout(() => checkCloudLibrary(state.videoId), 2000);
 
             refreshStationList();
         };
@@ -1871,7 +1872,7 @@
             aPlayer.seekTo(t, true);
             state.currentSpeed = 0;
             state.doorsOpen = true;
-            openDoors(); // This handles baseDist reset
+            openDoors(true); // This handles baseDist reset, skip discovery
             hideModals();
         }
 
