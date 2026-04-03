@@ -1064,6 +1064,70 @@
             animation-delay: 0.4s;
         }
 
+        /* Settings Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider-toggle {
+            background-color: var(--accent);
+        }
+
+        input:checked+.slider-toggle:before {
+            transform: translateX(26px);
+            background-color: #000;
+        }
+
+        /* Volume Slider Customization */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            height: 6px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -1152,6 +1216,7 @@
             <div class="ctrl-btn glass-card" id="btn-help-trigger">?</div>
             <div class="ctrl-btn glass-card" id="btn-video-config">🎞</div>
             <div class="ctrl-btn glass-card" id="btn-route-config">🗺</div>
+            <div class="ctrl-btn glass-card" id="btn-settings-trigger">⚙️</div>
             <div class="ctrl-btn glass-card" id="btn-fullscreen">⛶</div>
             <div class="ctrl-btn glass-card" id="btn-quick-sync">🔄</div>
             <div class="ctrl-btn btn-primary" id="btn-pause-toggle">⏸</div>
@@ -1283,6 +1348,39 @@
         </div>
     </div>
 
+    <div id="modal-settings" class="modal glass-card">
+        <div class="modal-header">
+            <h3 class="h-title">系統設定</h3>
+            <button class="close-modal">×</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="info-card">
+                <h4 style="margin-bottom: 15px;">音效設定</h4>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span style="font-size: 18px;">🔈</span>
+                    <input type="range" id="volume-slider" min="0" max="100" value="100" style="padding: 0;">
+                    <span id="volume-value" style="font-family: var(--font-mono); min-width: 35px;">100</span>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h4 style="margin-bottom: 15px;">駕駛輔助</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 14px; color: #fff;">自動開啟車門</div>
+                        <div style="font-size: 11px; opacity: 0.5;">抵達站點時若速度為 0 則自動開門</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-door-toggle" checked>
+                        <span class="slider-toggle"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="action-btn" onclick="hideModals()">確定並儲存</button>
+        </div>
+    </div>
+
     <!-- Jump Selection Menu -->
     <div id="jump-picker" class="modal glass-card">
         <div class="modal-header">
@@ -1364,7 +1462,9 @@
             targetIndex: -1,
             baseDist: 0,
             traveledMeters: 0,
-            lastVibrateGear: 5
+            lastVibrateGear: 5,
+            autoDoor: true,
+            volume: 100
         };
 
         // Default Yamanote Data for TpxTlO68CWI
@@ -1440,7 +1540,9 @@
         function onPlayerReady() {
             state.playersReady++;
             if (state.playersReady === 2) {
-                vPlayer.mute(); aPlayer.unMute();
+                vPlayer.mute();
+                aPlayer.unMute();
+                aPlayer.setVolume(state.volume);
                 $('startup-layer').style.opacity = '0';
                 setTimeout(() => {
                     $('startup-layer').style.display = 'none';
@@ -1491,12 +1593,15 @@
                         } else {
                             // En Route or Arriving
                             state.evalShown = false;
+
+                            // DISTANCE & TIME CALCULATION (Motion-based)
                             const dist = Math.max(0, Math.floor(state.baseDist - state.traveledMeters));
-                            const timeToOpen = Math.max(0, Math.ceil(currentTarget.time - curTime));
+                            // Use a standard 60km/h reference for ETA display consistency
+                            const timeToOpen = Math.max(0, Math.ceil(dist / 16.6));
 
                             $('stn-name').style.color = '#fff';
 
-                            if (curTime < currentTarget.time - 2) {
+                            if (dist > 15) {
                                 $('stn-meta').textContent = `距離: ${dist}m | 預計開門: ${timeToOpen}s`;
                                 if (Math.abs((currentTarget.time - curTime) - 15) < 0.25) {
                                     sfx.announce.play().catch(() => { });
@@ -1504,6 +1609,23 @@
                             } else {
                                 $('stn-meta').textContent = `即將抵達 | 正線上停車`;
                             }
+                        }
+                    }
+
+                    // --- AUTOMATIC DOOR MANAGEMENT ---
+                    if (currentTarget && !state.isPaused && state.autoDoor) {
+                        const timeToOpen = currentTarget.time - curTime;
+                        const departureTime = currentTarget.closeTime || (currentTarget.time + 20);
+                        const timeToClose = departureTime - curTime;
+
+                        // Auto Open: Speed 0, doors closed, and within arrival window (±2s)
+                        if (!state.doorsOpen && state.currentSpeed === 0 && Math.abs(timeToOpen) < 2) {
+                            openDoors();
+                        }
+
+                        // Auto Close: Doors open, and departure time reached
+                        if (state.doorsOpen && timeToClose <= 0.2) { // 0.2s buffer
+                            closeDoors();
                         }
                     }
                 }
@@ -1675,7 +1797,7 @@
             if (idx !== -1) {
                 const stn = stations[idx];
                 const diff = Math.abs(curTime - stn.time);
-                if (state.currentSpeed === 0 && !state.evalShown) {
+                if (state.currentSpeed === 0 && !state.evalShown && !skipDiscovery) {
                     showEvaluation(diff);
                     state.evalShown = true;
                 }
@@ -1744,6 +1866,7 @@
         $('btn-route-config').onclick = () => { refreshStationList(); toggleModal('modal-route'); };
         $('btn-video-config').onclick = () => toggleModal('modal-video');
         $('btn-help-trigger').onclick = () => toggleModal('modal-help');
+        $('btn-settings-trigger').onclick = () => toggleModal('modal-settings');
         $('btn-fullscreen').onclick = () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(e => alert(`Error: ${e.message}`));
@@ -1756,6 +1879,18 @@
             state.isPaused = !state.isPaused;
             if (state.isPaused) { vPlayer.pauseVideo(); aPlayer.pauseVideo(); $('btn-pause-toggle').textContent = '▶'; }
             else { vPlayer.playVideo(); aPlayer.playVideo(); $('btn-pause-toggle').textContent = '⏸'; }
+        };
+
+        // Settings Listeners
+        $('volume-slider').oninput = (e) => {
+            const val = e.target.value;
+            state.volume = val;
+            $('volume-value').textContent = val;
+            if (aPlayer && aPlayer.setVolume) aPlayer.setVolume(val);
+        };
+
+        $('auto-door-toggle').onchange = (e) => {
+            state.autoDoor = e.target.checked;
         };
 
         function updateTimeline(curTime, stations) {
