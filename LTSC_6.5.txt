@@ -1157,7 +1157,7 @@
         </div>
 
         <div class="logo-v">EDGERAIL</div>
-        <div class="logo-sub">Version 7.0 Professional</div>
+        <div class="logo-sub">Version 6.5 Professional</div>
         <div class="logo-sub">示範車輛 (可替換～)</div>
         <div style="margin: 20px 0; text-align: center;">
             <select id="route-selector"
@@ -1243,7 +1243,7 @@
 
     <div id="modal-changelog" class="modal glass-card">
         <div class="modal-header">
-            <h3 class="h-title">系統版本資訊 V7.0</h3>
+            <h3 class="h-title">系統版本資訊</h3>
             <button class="close-modal">×</button>
         </div>
         <div class="startup-info-container">
@@ -1251,22 +1251,22 @@
             <div class="info-card">
                 <h4><span class="version-tag">CONTENT</span> 包含內容</h4>
                 <ul class="info-list">
-                    <li>雙路線載入 (山手線 / 百合海鷗號)</li>
+                    <li>山手線 27 站點預設資料</li>
                     <li>MC-V4 工業級高精度物理</li>
                     <li>全手動門控與 11 段動力系統</li>
                     <li>影像音訊智能運動同步</li>
-                    <li>預設站點控制與熱差分機制</li>
+                    <li>支援 JSON 匯入/匯出</li>
                 </ul>
             </div>
             <!-- Update Log -->
             <div class="info-card">
-                <h4><span class="version-tag">UPDATES</span> 版本 V7.0 更新日誌</h4>
+                <h4><span class="version-tag">UPDATES</span> 更新日誌</h4>
                 <ul class="info-list">
-                    <li>加入內建路線切換選擇器</li>
-                    <li>新增系統行為「預設站點自動載入」開關</li>
-                    <li>新增百合海鷗號 (7300系) 示範車輛與站點</li>
-                    <li>優化軔力曲線與緩衝區駕駛手感</li>
-                    <li>確保本機空白狀態的不干擾原則</li>
+                    <li>優化軔力曲線與駕駛手感</li>
+                    <li>新增車站 15 秒出發緩衝區</li>
+                    <li>修復山手線站點數據編號</li>
+                    <li>改善連線與讀取穩健性</li>
+                    <li>完全回歸手動駕駛體驗</li>
                 </ul>
             </div>
         </div>
