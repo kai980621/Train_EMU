@@ -1055,7 +1055,8 @@
 
         <div style="border-top: 1px solid var(--glass-border); padding-top: 20px;">
             <label class="form-label">批次資料交換 (JSON)</label>
-            <textarea id="bulk-io" placeholder='[...] / 在此貼上或匯出資料' style="height: 100px; font-size: 10px;"></textarea>
+            <textarea id="bulk-io" placeholder='[...] / 在此貼上 JSON 或文字格式 (站名 到站時間 出發時間)'
+                style="height: 100px; font-size: 10px;"></textarea>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button class="action-btn" onclick="importData()">匯入資料</button>
                 <button class="action-btn" onclick="exportDataToClipboard()">複製到剪貼簿</button>
@@ -1591,31 +1592,62 @@
                 let raw = $('bulk-io').value.trim();
                 if (!raw) return alert("輸入區為空");
 
-                // Allow simple URL parsing if pasted alone
                 if (raw.startsWith('http')) {
                     const m = raw.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
                     if (m) { $('yt-url-input').value = raw; $('btn-fetch-yt').click(); return; }
                 }
 
-                const json = JSON.parse(raw);
-                if (Array.isArray(json)) {
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    // Try parsing as the custom text format: Name Arrival Departure
+                    const lines = raw.split('\n').filter(l => l.trim());
+                    data = lines.map(line => {
+                        const parts = line.trim().split(/\s+/);
+                        if (parts.length < 3) return null;
+
+                        const departure = parts.pop();
+                        const arrival = parts.pop();
+                        const name = parts.join(' ');
+
+                        const t2s = (t) => {
+                            if (!t || t === '---') return null;
+                            const p = t.split(':');
+                            if (p.length === 2) return parseInt(p[0]) * 60 + parseFloat(p[1]);
+                            return parseFloat(t);
+                        };
+
+                        const arr = t2s(arrival);
+                        const dep = t2s(departure);
+
+                        return {
+                            name,
+                            time: arr === null ? (dep !== null ? 0 : 0) : arr,
+                            closeTime: dep === null ? 0 : dep
+                        };
+                    }).filter(x => x);
+
+                    if (data.length === 0) throw new Error("Format error");
+                }
+
+                if (Array.isArray(data)) {
                     if (!state.videoId) return alert("匯入站點前請先連結影像");
-                    state.memory[state.videoId] = json.map(s => ({
+                    state.memory[state.videoId] = data.map(s => ({
                         name: s.name || '未命名站點',
                         time: parseFloat(s.time) || 0,
                         closeTime: parseFloat(s.closeTime) || 0
                     })).sort((a, b) => a.time - b.time);
                     saveMemory();
-                    alert("站點資料已成功注入");
-                } else if (typeof json === 'object') {
-                    // Bulk workspace import
-                    Object.assign(state.memory, json);
+                    alert(`成功匯入 ${state.memory[state.videoId].length} 個站點`);
+                } else if (typeof data === 'object') {
+                    Object.assign(state.memory, data);
                     saveMemory();
                     alert("工作環境已完全恢復");
                 }
             } catch (e) {
                 console.error(e);
-                alert("匯入失敗：資料損壞或格式錯誤");
+                alert("匯入失敗：格式不支援或資料損壞");
             }
         }
 
