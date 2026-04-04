@@ -1160,13 +1160,14 @@
         </div>
 
         <div class="logo-v">EDGERAIL</div>
-        <div class="logo-sub">Version 7.0 Professional</div>
+        <div class="logo-sub">Version 7.2 Professional</div>
         <div class="logo-sub">示範車輛 (可替換～)</div>
         <div style="margin: 20px 0; text-align: center;">
             <select id="route-selector"
                 style="background: rgba(0,0,0,0.6); color: var(--accent); border: 1px solid var(--glass-border); padding: 10px 20px; border-radius: 8px; font-family: var(--font-ui); font-size: 14px; outline: none; cursor: pointer; backdrop-filter: blur(10px);">
                 <option value="TpxTlO68CWI">山手線 (Yamanote Line) - E235系</option>
                 <option value="fPRANLWHxCI">百合海鷗號 (Yurikamome) - 7300系</option>
+                <option value="f8uxYIoC7zA">日比谷線 (Hibiya Line) - 13000系</option>
             </select>
         </div>
 
@@ -1263,13 +1264,12 @@
             </div>
             <!-- Update Log -->
             <div class="info-card">
-                <h4><span class="version-tag">UPDATES</span> 版本 V7.0 更新日誌</h4>
+                <h4><span class="version-tag">UPDATES</span> 版本 V7.2 更新日誌</h4>
                 <ul class="info-list">
-                    <li>加入內建路線切換選擇器</li>
-                    <li>新增系統行為「預設站點自動載入」開關</li>
-                    <li>新增百合海鷗號 (7300系) 示範車輛與站點</li>
-                    <li>優化軔力曲線與緩衝區駕駛手感</li>
-                    <li>確保本機空白狀態的不干擾原則</li>
+                    <li>釋放影片播放極限，最高速度開放至 300% (3.0 倍速)</li>
+                    <li>最佳化低速域加速曲線，解決 0-50km/h 播放過慢問題</li>
+                    <li>修復部分車輛資料緩存重疊問題</li>
+                    <li>新增日比谷線 (13000系) 預設車輛資料</li>
                 </ul>
             </div>
         </div>
@@ -1502,24 +1502,6 @@
         };
 
         // Default Yamanote Data for TpxTlO68CWI
-        const YURIKAMOME_DATA = [
-            { "name": "新橋 (U-01) Shimbashi", "time": 0, "closeTime": 30 },
-            { "name": "汐留 (U-02) Shiodome", "time": 101, "closeTime": 124 },
-            { "name": "竹芝 (U-03) Takeshiba", "time": 284, "closeTime": 307 },
-            { "name": "日之出 (U-04) Hinode", "time": 376, "closeTime": 399 },
-            { "name": "芝浦埠頭 (U-05) Shibaura-futō", "time": 487, "closeTime": 511 },
-            { "name": "お台場海濱公園 (U-06) Odaiba-kaihinkōen", "time": 817, "closeTime": 840 },
-            { "name": "台場 (U-07) Daiba", "time": 909, "closeTime": 932 },
-            { "name": "東京國際郵輪碼頭 (U-08) Tokyo International Cruise Terminal", "time": 1040, "closeTime": 1063 },
-            { "name": "遠程通訊中心 (U-09) Telecom Center", "time": 1150, "closeTime": 1173 },
-            { "name": "青海 (U-10) Aomi", "time": 1276, "closeTime": 1299 },
-            { "name": "東京國際展覽中心 (U-11) Tokyo Big Sight", "time": 1404, "closeTime": 1427 },
-            { "name": "有明 (U-12) Ariake", "time": 1508, "closeTime": 1531 },
-            { "name": "有明網球之森 (U-13) Ariake-Tennis-no-mori", "time": 1610, "closeTime": 1633 },
-            { "name": "市場前 (U-14) Shijō-mae", "time": 1718, "closeTime": 1741 },
-            { "name": "新豐洲 (U-15) Shin-toyosu", "time": 1798, "closeTime": 1821 },
-            { "name": "豐洲 (U-16) Toyosu Arrival", "time": 1921, "closeTime": 1951 }
-        ];
         const YAMANOTE_DATA = [
             { "name": "東京 (JY01) Tokyo", "time": 0, "closeTime": 39 },
             { "name": "有樂町 (JY30) Yurakucho", "time": 123, "closeTime": 153 },
@@ -1554,6 +1536,50 @@
             { "name": "東京 (JY01) Tokyo Arrival", "time": 3874, "closeTime": 3900 }
         ];
 
+        const YURIKAMOME_DATA = [
+            { "name": "新橋 (U-01) Shimbashi", "time": 0, "closeTime": 30 },
+            { "name": "汐留 (U-02) Shiodome", "time": 101, "closeTime": 124 },
+            { "name": "竹芝 (U-03) Takeshiba", "time": 284, "closeTime": 307 },
+            { "name": "日之出 (U-04) Hinode", "time": 376, "closeTime": 399 },
+            { "name": "芝浦埠頭 (U-05) Shibaura-futō", "time": 487, "closeTime": 511 },
+            { "name": "お台場海濱公園 (U-06) Odaiba-kaihinkōen", "time": 817, "closeTime": 840 },
+            { "name": "台場 (U-07) Daiba", "time": 909, "closeTime": 932 },
+            { "name": "東京國際郵輪碼頭 (U-08) Tokyo International Cruise Terminal", "time": 1040, "closeTime": 1063 },
+            { "name": "遠程通訊中心 (U-09) Telecom Center", "time": 1150, "closeTime": 1173 },
+            { "name": "青海 (U-10) Aomi", "time": 1276, "closeTime": 1299 },
+            { "name": "東京國際展覽中心 (U-11) Tokyo Big Sight", "time": 1404, "closeTime": 1427 },
+            { "name": "有明 (U-12) Ariake", "time": 1508, "closeTime": 1531 },
+            { "name": "有明網球之森 (U-13) Ariake-Tennis-no-mori", "time": 1610, "closeTime": 1633 },
+            { "name": "市場前 (U-14) Shijō-mae", "time": 1718, "closeTime": 1741 },
+            { "name": "新豐洲 (U-15) Shin-toyosu", "time": 1798, "closeTime": 1821 },
+            { "name": "豐洲 (U-16) Toyosu Arrival", "time": 1921, "closeTime": 1951 }
+        ];
+
+        const HIBIYA_DATA = [
+            { "name": "中目黑 (H01) Naka-meguro", "time": 0, "closeTime": 83 },
+            { "name": "恵比寿 (H02) Ebisu", "time": 225, "closeTime": 255 },
+            { "name": "広尾 (H03) Hiro-o", "time": 423, "closeTime": 453 },
+            { "name": "六本木 (H04) Roppongi", "time": 627, "closeTime": 657 },
+            { "name": "神谷町 (H05) Kamiyacho", "time": 817, "closeTime": 847 },
+            { "name": "虎ノ門ヒルズ (H06) Toranomon Hills", "time": 903, "closeTime": 933 },
+            { "name": "霞ヶ関 (H07) Kasumigaseki", "time": 1012, "closeTime": 1042 },
+            { "name": "日比谷 (H08) Hibiya", "time": 1168, "closeTime": 1198 },
+            { "name": "銀座 (H09) Ginza", "time": 1263, "closeTime": 1293 },
+            { "name": "東銀座 (H10) Higashi-ginza", "time": 1369, "closeTime": 1399 },
+            { "name": "築地 (H11) Tsukiji", "time": 1491, "closeTime": 1521 },
+            { "name": "八丁堀 (H12) Hatchōbori", "time": 1633, "closeTime": 1663 },
+            { "name": "茅場町 (H13) Kayabachō", "time": 1722, "closeTime": 1752 },
+            { "name": "人形町 (H14) Ningyōchō", "time": 1863, "closeTime": 1893 },
+            { "name": "小伝馬町 (H15) Kodenmachō", "time": 1959, "closeTime": 1989 },
+            { "name": "秋葉原 (H16) Akihabara", "time": 2076, "closeTime": 2106 },
+            { "name": "仲御徒町 (H17) Naka-okachimachi", "time": 2186, "closeTime": 2216 },
+            { "name": "上野 (H18) Ueno", "time": 2276, "closeTime": 2306 },
+            { "name": "入谷 (H19) Iriya", "time": 2403, "closeTime": 2433 },
+            { "name": "三ノ輪 (H20) Minowa", "time": 2525, "closeTime": 2555 },
+            { "name": "南千住 (H21) Minami-senju", "time": 2653, "closeTime": 2683 },
+            { "name": "北千住 (H22) Kita-senju Arrival", "time": 2826, "closeTime": 2856 }
+        ];
+
         // 預設資料的載入已移至 launchPlayers 階段，以配合設定的開關
 
         let vPlayer, aPlayer;
@@ -1573,13 +1599,22 @@
                 state.videoId = selector.value;
                 if (state.autoPreset && (!state.memory[state.videoId] || state.memory[state.videoId].length === 0)) {
                     if (state.videoId === 'TpxTlO68CWI') {
-                        state.memory[state.videoId] = YAMANOTE_DATA;
-                    } else {
-                        state.memory[state.videoId] = YURIKAMOME_DATA;
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(YAMANOTE_DATA));
+                    } else if (state.videoId === 'f8uxYIoC7zA') {
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(HIBIYA_DATA));
+                    } else if (state.videoId === 'fPRANLWHxCI') {
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(YURIKAMOME_DATA));
                     }
-                } else if (!state.memory[state.videoId]) {
-                    state.memory[state.videoId] = []; // initialize empty if autoPreset is off
+                    /* 
+                    [手動新增教學 / Manual Add Instruction]
+                    如果您要新增第 4 條路線：
+                    1. 在 HTML 約 1167 行的 <select id="route-selector"> 中新增一個 <option value="影片ID">名稱</option>
+                    2. 在下方定義資料常數，例如：const NEW_LINE_DATA = [...];
+                    3. 在這裡新增一個 else if (state.videoId === '影片ID') { state.memory[state.videoId] = NEW_LINE_DATA; }
+                    */
                 }
+            } else if (!state.memory[state.videoId]) {
+                state.memory[state.videoId] = []; // initialize empty if autoPreset is off
             }
 
             // Unlock Speech Synthesis - Mandatory for some browsers
@@ -1587,8 +1622,12 @@
                 const dummy = new SpeechSynthesisUtterance("");
                 window.speechSynthesis.speak(dummy);
             }
+
+            // Start initializing the players with the selected video
+            $('btn-master-launch').disabled = true;
+            $('btn-master-launch').textContent = 'INITIALIZING COCKPIT...';
             launchPlayers();
-        };
+        }
 
         function launchPlayers() {
             const playerVars = { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestybranding: 1, rel: 0, iv_load_policy: 3, playsinline: 1 };
@@ -1756,13 +1795,13 @@
                         if (elapsed < 15000 && state.currentSpeed < 15) {
                             rate = 1.0;
                         } else {
-                            // 其他情況根據車速，最低 0.25 倍速
-                            rate = Math.max(0.25, state.currentSpeed / 60.0);
+                            // 其他情況根據車速增快影片，/40.0 讓低速時感覺更快
+                            rate = Math.max(0.25, state.currentSpeed / 40.0);
                         }
                     }
                 }
 
-                rate = Math.max(0.25, Math.min(2.0, rate));
+                rate = Math.max(0.25, Math.min(3.0, rate));
                 if (Math.abs(rate - state.lastRate) > 0.05) {
                     vPlayer.setPlaybackRate(rate);
                     state.lastRate = rate;
