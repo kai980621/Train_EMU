@@ -173,6 +173,82 @@
             letter-spacing: 2px;
         }
 
+        /* ECHO AI Scanner HUD */
+        #ai-scanner-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+            display: none;
+        }
+
+        .scanner-box {
+            position: absolute;
+            border: 2px solid var(--accent);
+            border-radius: 4px;
+            background: rgba(0, 229, 255, 0.1);
+            transition: all 0.3s;
+            display: flex;
+            align-items: flex-start;
+            padding: 5px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 15px var(--accent);
+            animation: scanLine 4s infinite ease-in-out;
+        }
+
+        @keyframes scanLine {
+            0% {
+                top: 0%;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0%;
+            }
+        }
+
+        .ai-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .ai-pulse::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
         .status-dot {
             width: 10px;
             height: 10px;
@@ -200,6 +276,7 @@
             backdrop-filter: blur(20px);
             letter-spacing: 1px;
             box-shadow: inset 0 0 15px rgba(94, 252, 255, 0.05);
+            font-variant-numeric: tabular-nums;
         }
 
         #video-time {
@@ -293,6 +370,8 @@
             display: block;
             margin-top: 8px;
             letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+            min-height: 24px;
         }
 
         /* Bottom Controls - Speedometer */
@@ -399,6 +478,15 @@
             touch-action: none;
         }
 
+        #mascon-handle::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+        }
+
         /* Door Indicator */
         #door-hud {
             position: absolute;
@@ -480,6 +568,7 @@
             padding: 32px;
             display: none;
             z-index: 20000;
+            /* Increased to be above startup layer */
             overflow-y: auto;
             pointer-events: auto;
         }
@@ -557,6 +646,21 @@
             overflow: hidden;
         }
 
+        .launch-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(94, 252, 255, 0.2), transparent);
+            transition: 0.6s;
+        }
+
+        .launch-btn:hover::before {
+            left: 100%;
+        }
+
         .launch-btn:not(:disabled):hover {
             background: var(--accent);
             color: #000;
@@ -565,10 +669,21 @@
         }
 
         /* Startup Info Modal Logic */
+        #modal-changelog {
+            width: 800px;
+            max-width: 95vw;
+        }
+
         .startup-info-container {
             display: flex;
             gap: 20px;
             text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .startup-info-container {
+                flex-direction: column;
+            }
         }
 
         .info-card {
@@ -579,7 +694,52 @@
             padding: 20px;
         }
 
-        /* Changelog Trigger */
+        .info-card h4 {
+            font-family: var(--font-ui);
+            color: var(--accent);
+            margin: 0 0 12px 0;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(94, 252, 255, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        .info-list li {
+            margin-bottom: 6px;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .info-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .version-tag {
+            background: var(--accent);
+            color: #000;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 900;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        /* Redesigned Changelog Trigger */
         .changelog-trigger {
             position: absolute;
             top: 30px;
@@ -595,6 +755,17 @@
             cursor: pointer;
             transition: all 0.3s;
             z-index: 10001;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .changelog-trigger:hover {
+            background: var(--accent);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .changelog-trigger:hover i,
+        .changelog-trigger:hover span {
+            color: #000;
         }
 
         .changelog-trigger span {
@@ -620,6 +791,10 @@
             transition: border-color 0.2s;
         }
 
+        input:focus {
+            border-color: var(--accent);
+        }
+
         .form-label {
             font-size: 11px;
             color: var(--text-dim);
@@ -643,6 +818,10 @@
             transition: 0.2s;
         }
 
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         .btn-green {
             background: var(--success);
             color: #000;
@@ -655,6 +834,7 @@
             border: 1px solid var(--danger);
         }
 
+        /* Station List */
         .stn-item {
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--glass-border);
@@ -665,9 +845,229 @@
             grid-template-columns: 1fr auto;
             gap: 15px;
             align-items: center;
+            backdrop-filter: blur(10px);
         }
 
-        /* Switch toggles & Scrollbars ... preserving */
+        .stn-info h4 {
+            margin: 0 0 5px;
+            font-family: var(--font-ui);
+            font-size: 16px;
+        }
+
+        .stn-info p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.5;
+            font-family: var(--font-mono);
+        }
+
+        /* Mobile Optimization */
+        #mobile-touch-zones {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            pointer-events: none;
+        }
+
+        /* Mobile Responsiveness Overrides */
+        @media (max-width: 768px) {
+            #route-timeline {
+                display: none !important;
+            }
+
+            #stn-container {
+                padding: 10px 20px;
+                border-radius: 12px;
+            }
+
+            #stn-name {
+                font-size: 24px;
+            }
+
+            #stn-meta {
+                font-size: 14px;
+            }
+
+            .logo-v {
+                font-size: 42px;
+            }
+        }
+
+        @media (max-width: 1000px),
+        (max-height: 600px) {
+            #mobile-touch-zones {
+                display: block;
+            }
+
+            #mascon-container {
+                right: 20px;
+                scale: 0.8;
+                transform-origin: bottom right;
+            }
+
+            #side-panels {
+                left: 20px;
+                scale: 0.75;
+                transform-origin: bottom left;
+                gap: 10px;
+            }
+
+            .ctrl-btn {
+                width: 58px;
+                height: 58px;
+            }
+
+            #speed-hud {
+                bottom: 20px;
+                gap: 20px;
+            }
+
+            #speed-value {
+                font-size: 72px;
+            }
+
+            #station-display {
+                min-width: 300px;
+                top: 50px;
+            }
+
+            #stn-name {
+                font-size: 28px;
+            }
+
+            .startup-info-container {
+                flex-direction: column;
+                gap: 20px;
+                margin-top: 20px;
+                overflow-y: auto;
+                max-height: 40vh;
+                padding-bottom: 20px;
+            }
+        }
+
+        .touch-zone {
+            position: absolute;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.05);
+            font-family: var(--font-ui);
+            font-size: 32px;
+            font-weight: 900;
+            background: rgba(255, 255, 255, 0.01);
+            transition: background 0.1s;
+        }
+
+        .touch-zone:active {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .zone-left {
+            left: 0;
+            top: 0;
+            width: 25%;
+            height: 100%;
+            border-right: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .zone-right {
+            right: 0;
+            top: 0;
+            width: 25%;
+            height: 100%;
+            border-left: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .zone-top {
+            left: 25%;
+            top: 0;
+            width: 50%;
+            height: 20%;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            font-size: 18px;
+        }
+
+        #eval-overlay {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5000;
+            pointer-events: none;
+            text-align: center;
+            opacity: 0;
+            transition: 0.5s;
+        }
+
+        .eval-grade {
+            font-family: var(--font-ui);
+            font-size: 80px;
+            font-weight: 900;
+            margin: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 40px;
+            border-radius: 20px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        #eval-detail {
+            background: rgba(0, 0, 0, 0.6);
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* AI Waveform */
+        .waveform {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+        }
+
+        .wave-bar {
+            width: 2px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 1px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                height: 4px;
+            }
+
+            50% {
+                height: 16px;
+            }
+        }
+
+        .wave-bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .wave-bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .wave-bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .wave-bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        /* Settings Toggle Switch */
         .switch {
             position: relative;
             display: inline-block;
@@ -688,6 +1088,7 @@
             background-color: rgba(255, 255, 255, 0.1);
             transition: .4s;
             border-radius: 24px;
+            border: 1px solid var(--glass-border);
         }
 
         .slider-toggle:before {
@@ -711,8 +1112,10 @@
             background-color: #000;
         }
 
+        /* Volume Slider Customization */
         input[type=range] {
             -webkit-appearance: none;
+            appearance: none;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             height: 6px;
@@ -725,42 +1128,16 @@
             border-radius: 50%;
             background: var(--accent);
             cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
-        /* Evaluator Box */
-        #eval-overlay {
-            position: fixed;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 5000;
-            pointer-events: none;
-            text-align: center;
-            opacity: 0;
-            transition: 0.5s;
-        }
-
-        .eval-grade {
-            font-family: var(--font-ui);
-            font-size: 80px;
-            font-weight: 900;
-            margin: 0;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px 40px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-
-        #eval-detail {
-            background: rgba(0, 0, 0, 0.6);
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -777,20 +1154,20 @@
         <p style="opacity: 0.6;">請旋轉您的設備以獲得最佳駕駛艙視角</p>
     </div>
 
-    <!-- Original Start UI exactly with the added line selection-->
     <div id="startup-layer">
         <div class="changelog-trigger" onclick="toggleModal('modal-changelog')" title="Update Log">
-            <span>INFO</span>
+            <span>UPDT</span>
         </div>
 
         <div class="logo-v">EDGERAIL</div>
-        <div class="logo-sub">Version 7.0 REPAIR</div>
+        <div class="logo-sub">Version 7.2 Professional</div>
+        <div class="logo-sub">示範車輛 (可替換～)</div>
         <div style="margin: 20px 0; text-align: center;">
             <select id="route-selector"
                 style="background: rgba(0,0,0,0.6); color: var(--accent); border: 1px solid var(--glass-border); padding: 10px 20px; border-radius: 8px; font-family: var(--font-ui); font-size: 14px; outline: none; cursor: pointer; backdrop-filter: blur(10px);">
                 <option value="TpxTlO68CWI">山手線 (Yamanote Line) - E235系</option>
-                <option value="bBqu8tBXXm0">東京地下鐵日比谷線 (Hibiya Line) - 13000系</option>
                 <option value="fPRANLWHxCI">百合海鷗號 (Yurikamome) - 7300系</option>
+                <option value="f8uxYIoC7zA">日比谷線 (Hibiya Line) - 13000系</option>
             </select>
         </div>
 
@@ -799,9 +1176,12 @@
         <div id="startup-log"
             style="margin-top: 30px; font-size: 10px; font-family: var(--font-mono); color: var(--accent); opacity: 0.5; letter-spacing: 2px;">
             VERIFYING CORE MODULES...</div>
+
+        <div id="startup-log"
+            style="margin-top: 30px; font-size: 18px; font-family: var(--font-mono); color: var(--accent); opacity: 1; letter-spacing: 2px; color: #f90000;">
+            未來會新增更多預設車輛，且目前站點時間還是有錯誤！</div>
     </div>
 
-    <!-- Players and Overlay identical to LTS_V7 -->
     <div id="visual-player-container"></div>
     <div id="audio-player-container"></div>
     <div class="overlay-layer"></div>
@@ -816,6 +1196,7 @@
             <div id="clock">00:00:00</div>
         </div>
 
+        <!-- Route Timeline -->
         <div id="route-timeline"></div>
 
         <div id="station-display">
@@ -825,7 +1206,6 @@
             </div>
         </div>
 
-        <!-- 這些皆無變更，原屬點選邏輯有效 -->
         <div id="door-hud" class="glass-card door-closed" onclick="handleAction('ToggleDoors')"
             style="cursor: pointer; pointer-events: auto;">車門鎖定</div>
 
@@ -845,42 +1225,57 @@
             </div>
             <div
                 style="font-family: var(--font-mono); font-size: 8px; font-weight: 500; opacity: 0.5; margin-top: 10px;">
-            </div>
+                MC-V4 INDUSTRIAL</div>
         </div>
 
-        <!-- 左下所有原始快捷視窗都好好的保留在此處 -->
         <div id="side-panels">
             <div class="ctrl-btn glass-card" id="btn-help-trigger">?</div>
             <div class="ctrl-btn glass-card" id="btn-video-config">🎞</div>
             <div class="ctrl-btn glass-card" id="btn-route-config">🗺</div>
             <div class="ctrl-btn glass-card" id="btn-settings-trigger">⚙️</div>
             <div class="ctrl-btn glass-card" id="btn-fullscreen">⛶</div>
-            <div class="ctrl-btn glass-card" id="btn-quick-sync" title="重新強制同步 X鍵">🔄</div>
+            <div class="ctrl-btn glass-card" id="btn-quick-sync">🔄</div>
             <div class="ctrl-btn btn-primary" id="btn-pause-toggle">⏸</div>
         </div>
+
     </div>
 
-    <!-- Rating Display Component -->
     <div id="eval-overlay">
         <div class="eval-grade">EXCELLENT</div>
         <div id="eval-detail" style="font-family: var(--font-mono); font-size: 18px;">ERROR: 0.12m</div>
     </div>
 
-    <!-- Modals Panels EXACTLY AS LTS V7 !!! NO RENAMES, NO CUTOUTS !-->
     <div id="modal-changelog" class="modal glass-card">
         <div class="modal-header">
-            <h3 class="h-title">系統版本資訊 V7.1 修訂版</h3>
+            <h3 class="h-title">系統版本資訊 V7.0</h3>
             <button class="close-modal">×</button>
         </div>
         <div class="startup-info-container">
+            <!-- Content List -->
             <div class="info-card">
-                <p style="font-size: 13px;">✅ 新增日比谷路線(下拉預設)</p>
-                <p style="font-size: 13px;">✅ [修正] 把倒數秒數綁定剩餘車距計算，徹底消除歸零錯誤Bug，抵達必然0公尺</p>
-                <p style="font-size: 13px;">✅ [音效修訂] 外掛一組無任何碎石碰撞聲、僅存在加速極靜清透之 VVVF馬達電流生成波</p>
+                <h4><span class="version-tag">CONTENT</span> 包含內容</h4>
+                <ul class="info-list">
+                    <li>雙路線載入 (山手線 / 百合海鷗號)</li>
+                    <li>MC-V4 工業級高精度物理</li>
+                    <li>全手動門控與 11 段動力系統</li>
+                    <li>影像音訊智能運動同步</li>
+                    <li>預設站點控制與熱差分機制</li>
+                </ul>
+            </div>
+            <!-- Update Log -->
+            <div class="info-card">
+                <h4><span class="version-tag">UPDATES</span> 版本 V7.2 更新日誌</h4>
+                <ul class="info-list">
+                    <li>釋放影片播放極限，最高速度開放至 300% (3.0 倍速)</li>
+                    <li>最佳化低速域加速曲線，解決 0-50km/h 播放過慢問題</li>
+                    <li>修復部分車輛資料緩存重疊問題</li>
+                    <li>新增日比谷線 (13000系) 預設車輛資料</li>
+                </ul>
             </div>
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="modal-route" class="modal glass-card">
         <div class="modal-header">
             <h3 class="h-title">路線資料庫</h3>
@@ -888,7 +1283,11 @@
         </div>
         <button class="action-btn" onclick="document.getElementById('smart-discovery').style.display='block'"
             style="margin-bottom: 20px;">+ 手動新增/探索站點</button>
-        <div id="stn-list-scroll" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
+
+        <div id="stn-list-scroll" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+            <!-- Stations -->
+        </div>
+
         <div style="border-top: 1px solid var(--glass-border); padding-top: 20px;">
             <label class="form-label">批次資料交換 (JSON)</label>
             <textarea id="bulk-io" placeholder='[...] / 在此貼上 JSON 或文字格式 (站名 到站時間 出發時間)'
@@ -945,7 +1344,7 @@
             <p
                 style="color: var(--warning); font-weight: 800; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; margin-top: 15px;">
                 系統工具 (System)</p>
-            <p><b>[X]</b> 強制同步影像與聲音 !!</p>
+            <p><b>[X]</b> 強制同步影像與聲音</p>
             <p><b>[F]</b> 全螢幕切換</p>
         </div>
     </div>
@@ -964,7 +1363,6 @@
         </div>
     </div>
 
-    <!-- Original settings -->
     <div id="modal-settings" class="modal glass-card">
         <div class="modal-header">
             <h3 class="h-title">系統設定</h3>
@@ -972,7 +1370,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="info-card">
-                <h4 style="margin-bottom: 15px;">音效設定 (X 鍵可以秒切重整主影片配樂對準！)</h4>
+                <h4 style="margin-bottom: 15px;">音效設定</h4>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <span style="font-size: 18px;">🔈</span>
                     <input type="range" id="volume-slider" min="0" max="100" value="100" style="padding: 0;">
@@ -987,8 +1385,10 @@
                         <div style="font-size: 14px; color: #fff;">自動開啟車門</div>
                         <div style="font-size: 11px; opacity: 0.5;">抵達站點時若速度為 0 則自動開門</div>
                     </div>
-                    <label class="switch"><input type="checkbox" id="auto-door-toggle" checked><span
-                            class="slider-toggle"></span></label>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-door-toggle" checked>
+                        <span class="slider-toggle"></span>
+                    </label>
                 </div>
             </div>
 
@@ -999,8 +1399,10 @@
                         <div style="font-size: 14px; color: #fff;">載入預設站點</div>
                         <div style="font-size: 11px; opacity: 0.5;">啟動時若無站點，自動載入該路線預設資料</div>
                     </div>
-                    <label class="switch"><input type="checkbox" id="auto-preset-toggle" checked><span
-                            class="slider-toggle"></span></label>
+                    <label class="switch">
+                        <input type="checkbox" id="auto-preset-toggle" checked>
+                        <span class="slider-toggle"></span>
+                    </label>
                 </div>
             </div>
 
@@ -1008,6 +1410,7 @@
         </div>
     </div>
 
+    <!-- Jump Selection Menu -->
     <div id="jump-picker" class="modal glass-card">
         <div class="modal-header">
             <h3 id="jump-title" class="h-title">選擇跳躍目標</h3>
@@ -1016,7 +1419,6 @@
         <div id="jump-list" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;"></div>
     </div>
 
-    <!-- DOM BASE Helper Script -->
     <script>
         const $ = id => document.getElementById(id);
         const log = (msg, level = 'info') => {
@@ -1027,6 +1429,7 @@
             }
         };
 
+        // --- Critical Initialization ---
         window.onYouTubeIframeAPIReady = function () {
             if (state) state.apiReady = true;
             if ($('btn-master-launch')) {
@@ -1036,76 +1439,22 @@
             }
         };
 
-        // Safety Fallback (If API is blocked/slow)
-        setTimeout(() => {
+        // Safety Fallback (If API is blocked/slow/cached)
+        setInterval(() => {
             if ($('btn-master-launch') && $('btn-master-launch').disabled) {
-                $('btn-master-launch').disabled = false;
-                $('btn-master-launch').textContent = 'INITIALIZE COCKPIT (MANUAL)';
-                log('CORE_SYSTEM READY (FALLBACK)', 'warn');
+                if (typeof YT !== 'undefined' && YT && YT.Player) {
+                    window.onYouTubeIframeAPIReady();
+                } else {
+                    $('btn-master-launch').disabled = false;
+                    $('btn-master-launch').textContent = 'INITIALIZE COCKPIT (MANUAL)';
+                    log('CORE_SYSTEM READY (FALLBACK)', 'warn');
+                }
             }
-        }, 5000);
+        }, 2500);
     </script>
-
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // === 注入一個最高階純粹獨立且柔和之引擎發動聲明物件 === 
-        // 絕對不蓋干擾主迴圈運作！
-        class VVVFEngineSynth {
-            constructor() {
-                const ac = window.AudioContext || window.webkitAudioContext;
-                this.ctx = new ac();
-
-                this.osc = this.ctx.createOscillator();
-                this.gain = this.ctx.createGain();
-                this.filter = this.ctx.createBiquadFilter();
-
-                this.osc.type = 'triangle'; // 純粹交流電尖細感聲 (這才符合捷運電機音!)
-                this.gain.gain.value = 0;
-                this.filter.type = 'lowpass';
-                this.filter.frequency.value = 1800; // 適中截斷聲響，避免不悅刺耳 
-
-                this.osc.connect(this.filter);
-                this.filter.connect(this.gain);
-                this.gain.connect(this.ctx.destination);
-
-                this.osc.start();
-                this.onActivePlayState = false;
-            }
-
-            processStateHook(carVelocityFloatVal, theGearStateRangeNbr) {
-                if (this.ctx.state === 'suspended') this.ctx.resume();
-
-                // 出力時才存在 (油門及制動阻力運轉聲！) , N 空檔完全不會發生！
-                const doingMechEffortValBoolean = theGearStateRangeNbr !== 5;
-
-                if (!doingMechEffortValBoolean || carVelocityFloatVal < 0.1 || carVelocityFloatVal > 85.0) {
-                    // Fading silence
-                    if (this.onActivePlayState) {
-                        this.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.4);
-                        this.onActivePlayState = false;
-                    } return;
-                }
-
-                this.onActivePlayState = true;
-
-                // Dynamic strength according strictly into gear pressure scaling range of absolute force !
-                let EffStrengthV = theGearStateRangeNbr > 5 ? (theGearStateRangeNbr - 5) : (5 - theGearStateRangeNbr);
-                let targetedVolRatioLim = 0.04 + (EffStrengthV * 0.035);  // Gentle volumes ceiling
-
-                this.gain.gain.setTargetAtTime(targetedVolRatioLim, this.ctx.currentTime, 0.25);
-
-                // Typical Pitch modulation simulating Tokyo local Subways 
-                let OutputEngineSoundBaseHrtzsValsRingsT = 200;
-                if (carVelocityFloatVal < 18) OutputEngineSoundBaseHrtzsValsRingsT = 180 + (carVelocityFloatVal * 20); // rapid climbing 
-                else if (carVelocityFloatVal < 45) OutputEngineSoundBaseHrtzsValsRingsT = 540 + (carVelocityFloatVal * 4.5);
-                else OutputEngineSoundBaseHrtzsValsRingsT = 760;
-
-                this.osc.frequency.setTargetAtTime(OutputEngineSoundBaseHrtzsValsRingsT, this.ctx.currentTime, 0.1);
-                this.filter.frequency.setTargetAtTime(800 + (carVelocityFloatVal * 20), this.ctx.currentTime, 0.2);
-            }
-        }
-
-        // ============ EXACTLY LTS V7 VAR DECLARATION ============
+        // --- Core Engine Configuration ---
         const CONFIG = {
             GEARS: [
                 { id: 0, name: 'EB', decel: 15.0, color: '#ff2d55' },
@@ -1124,30 +1473,116 @@
             MAX_SPEED: 130
         };
 
+        const ROUTE_LIBRARY = {}; // 移除預設站點
+
+
+        let state = {
+            isStarted: false,
+            isPaused: false,
+            currentSpeed: 0,
+            currentGear: 5,
+            doorsOpen: true,
+            videoId: 'TpxTlO68CWI',
+            apiReady: false,
+            playersReady: 0,
+            memory: JSON.parse(localStorage.getItem('edgerail_st_v5') || '{}'),
+            lastRate: 1,
+            evalShown: false,
+            scheduleOffset: 0,
+            standbyTimer: null,
+            standbyActive: false,
+            doorCloseTime: 0,
+            targetIndex: -1,
+            baseDist: 0,
+            traveledMeters: 0,
+            lastVibrateGear: 5,
+            autoDoor: true,
+            autoPreset: true,
+            volume: 100
+        };
+
+        // Default Yamanote Data for TpxTlO68CWI
         const YAMANOTE_DATA = [
-            { "name": "東京 (JY01)", "time": 0, "closeTime": 39 }, { "name": "有樂町 (JY30)", "time": 123, "closeTime": 153 }, { "name": "新橋 (JY29)", "time": 241, "closeTime": 276 },
-            { "name": "浜松町 (JY28)", "time": 370, "closeTime": 404 }, { "name": "田町 (JY27)", "time": 500, "closeTime": 532 }, { "name": "高輪ゲートウェイ", "time": 663, "closeTime": 692 }
+            { "name": "東京 (JY01) Tokyo", "time": 0, "closeTime": 39 },
+            { "name": "有樂町 (JY30) Yurakucho", "time": 123, "closeTime": 153 },
+            { "name": "新橋 (JY29) Shimbashi", "time": 241, "closeTime": 276 },
+            { "name": "浜松町 (JY28) Hamamatsucho", "time": 370, "closeTime": 404 },
+            { "name": "田町 (JY27) Tamachi", "time": 500, "closeTime": 532 },
+            { "name": "高輪ゲートウェイ (JY26) Takanawa Gateway", "time": 663, "closeTime": 692 },
+            { "name": "品川 (JY25) Shinagawa", "time": 756, "closeTime": 811 },
+            { "name": "大崎 (JY24) Osaki", "time": 933, "closeTime": 992 },
+            { "name": "五反田 (JY23) Gotanda", "time": 1099, "closeTime": 1129 },
+            { "name": "目黒 (JY22) Meguro", "time": 1217, "closeTime": 1249 },
+            { "name": "恵比壽 (JY21) Ebisu", "time": 1360, "closeTime": 1400 },
+            { "name": "渋谷 (JY20) Shibuya", "time": 1496, "closeTime": 1542 },
+            { "name": "原宿 (JY19) Harajuku", "time": 1678, "closeTime": 1710 },
+            { "name": "代々木 (JY18) Yoyogi", "time": 1816, "closeTime": 1846 },
+            { "name": "新宿 (JY17) Shinjuku", "time": 1914, "closeTime": 1984 },
+            { "name": "新大久保 (JY16) Shin-Okubo", "time": 2077, "closeTime": 2108 },
+            { "name": "高田馬場 (JY15) Takadanobaba", "time": 2199, "closeTime": 2231 },
+            { "name": "目白 (JY14) Mejiro", "time": 2311, "closeTime": 2342 },
+            { "name": "池袋 (JY13) Ikebukuro", "time": 2424, "closeTime": 2500 },
+            { "name": "大塚 (JY12) Otsuka", "time": 2628, "closeTime": 2660 },
+            { "name": "巣鴨 (JY11) Sugamo", "time": 2741, "closeTime": 2772 },
+            { "name": "駒込 (JY10) Komagome", "time": 2840, "closeTime": 2870 },
+            { "name": "田端 (JY09) Tabata", "time": 2972, "closeTime": 3011 },
+            { "name": "西日暮里 (JY08) Nishi-Nippori", "time": 3108, "closeTime": 3136 },
+            { "name": "日暮里 (JY07) Nippori", "time": 3198, "closeTime": 3230 },
+            { "name": "鶯谷 (JY06) Uguisudani", "time": 3303, "closeTime": 3332 },
+            { "name": "上野 (JY05) Ueno", "time": 3418, "closeTime": 3470 },
+            { "name": "御徒町 (JY04) Okachimachi", "time": 3558, "closeTime": 3588 },
+            { "name": "秋葉原 (JY03) Akihabara", "time": 3662, "closeTime": 3696 },
+            { "name": "神田 (JY02) Kanda", "time": 3759, "closeTime": 3787 },
+            { "name": "東京 (JY01) Tokyo Arrival", "time": 3874, "closeTime": 3900 }
         ];
 
         const YURIKAMOME_DATA = [
-            { "name": "新橋 (U-01)", "time": 0, "closeTime": 30 }, { "name": "汐留 (U-02)", "time": 101, "closeTime": 124 }, { "name": "竹芝 (U-03)", "time": 284, "closeTime": 307 }
+            { "name": "新橋 (U-01) Shimbashi", "time": 0, "closeTime": 30 },
+            { "name": "汐留 (U-02) Shiodome", "time": 101, "closeTime": 124 },
+            { "name": "竹芝 (U-03) Takeshiba", "time": 284, "closeTime": 307 },
+            { "name": "日之出 (U-04) Hinode", "time": 376, "closeTime": 399 },
+            { "name": "芝浦埠頭 (U-05) Shibaura-futō", "time": 487, "closeTime": 511 },
+            { "name": "お台場海濱公園 (U-06) Odaiba-kaihinkōen", "time": 817, "closeTime": 840 },
+            { "name": "台場 (U-07) Daiba", "time": 909, "closeTime": 932 },
+            { "name": "東京國際郵輪碼頭 (U-08) Tokyo International Cruise Terminal", "time": 1040, "closeTime": 1063 },
+            { "name": "遠程通訊中心 (U-09) Telecom Center", "time": 1150, "closeTime": 1173 },
+            { "name": "青海 (U-10) Aomi", "time": 1276, "closeTime": 1299 },
+            { "name": "東京國際展覽中心 (U-11) Tokyo Big Sight", "time": 1404, "closeTime": 1427 },
+            { "name": "有明 (U-12) Ariake", "time": 1508, "closeTime": 1531 },
+            { "name": "有明網球之森 (U-13) Ariake-Tennis-no-mori", "time": 1610, "closeTime": 1633 },
+            { "name": "市場前 (U-14) Shijō-mae", "time": 1718, "closeTime": 1741 },
+            { "name": "新豐洲 (U-15) Shin-toyosu", "time": 1798, "closeTime": 1821 },
+            { "name": "豐洲 (U-16) Toyosu Arrival", "time": 1921, "closeTime": 1951 }
         ];
 
         const HIBIYA_DATA = [
-            { "name": "霞之關 (H07)", "time": 0, "closeTime": 40 }, { "name": "神谷町 (H06)", "time": 113, "closeTime": 140 }, { "name": "六本木 (H04)", "time": 222, "closeTime": 250 },
-            { "name": "廣尾 (H03)", "time": 333, "closeTime": 365 }, { "name": "惠比壽 (H02)", "time": 468, "closeTime": 498 }, { "name": "中目黑 (H01)", "time": 585, "closeTime": 630 }
+            { "name": "中目黑 (H01) Naka-meguro", "time": 0, "closeTime": 83 },
+            { "name": "恵比寿 (H02) Ebisu", "time": 225, "closeTime": 255 },
+            { "name": "広尾 (H03) Hiro-o", "time": 423, "closeTime": 453 },
+            { "name": "六本木 (H04) Roppongi", "time": 627, "closeTime": 657 },
+            { "name": "神谷町 (H05) Kamiyacho", "time": 817, "closeTime": 847 },
+            { "name": "虎ノ門ヒルズ (H06) Toranomon Hills", "time": 903, "closeTime": 933 },
+            { "name": "霞ヶ関 (H07) Kasumigaseki", "time": 1012, "closeTime": 1042 },
+            { "name": "日比谷 (H08) Hibiya", "time": 1168, "closeTime": 1198 },
+            { "name": "銀座 (H09) Ginza", "time": 1263, "closeTime": 1293 },
+            { "name": "東銀座 (H10) Higashi-ginza", "time": 1369, "closeTime": 1399 },
+            { "name": "築地 (H11) Tsukiji", "time": 1491, "closeTime": 1521 },
+            { "name": "八丁堀 (H12) Hatchōbori", "time": 1633, "closeTime": 1663 },
+            { "name": "茅場町 (H13) Kayabachō", "time": 1722, "closeTime": 1752 },
+            { "name": "人形町 (H14) Ningyōchō", "time": 1863, "closeTime": 1893 },
+            { "name": "小伝馬町 (H15) Kodenmachō", "time": 1959, "closeTime": 1989 },
+            { "name": "秋葉原 (H16) Akihabara", "time": 2076, "closeTime": 2106 },
+            { "name": "仲御徒町 (H17) Naka-okachimachi", "time": 2186, "closeTime": 2216 },
+            { "name": "上野 (H18) Ueno", "time": 2276, "closeTime": 2306 },
+            { "name": "入谷 (H19) Iriya", "time": 2403, "closeTime": 2433 },
+            { "name": "三ノ輪 (H20) Minowa", "time": 2525, "closeTime": 2555 },
+            { "name": "南千住 (H21) Minami-senju", "time": 2653, "closeTime": 2683 },
+            { "name": "北千住 (H22) Kita-senju Arrival", "time": 2826, "closeTime": 2856 }
         ];
 
-        let state = {
-            isStarted: false, isPaused: false, currentSpeed: 0, currentGear: 5, doorsOpen: true,
-            videoId: 'TpxTlO68CWI', apiReady: false, playersReady: 0,
-            memory: JSON.parse(localStorage.getItem('edgerail_st_v5') || '{}'),
-            lastRate: 1, evalShown: false, targetIndex: -1, baseDist: 0, traveledMeters: 0,
-            autoDoor: true, autoPreset: true, volume: 100
-        };
+        // 預設資料的載入已移至 launchPlayers 階段，以配合設定的開關
 
-        let vPlayer, aPlayer, trainSndExtHookPluginLayerModObjVAR = null;
-
+        let vPlayer, aPlayer;
         const sfx = {
             announce: new Audio('https://actions.google.com/sounds/v1/transportation/subway_arrival.ogg'),
             doorIn: new Audio('https://od.lk/s/OTFfMzg1ODI4MTVf/door_open.mp3'),
@@ -1156,30 +1591,49 @@
 
 
         $('btn-master-launch').onclick = () => {
-            document.documentElement.requestFullscreen().catch(() => { });
+            document.body.requestFullscreen().catch(() => { });
 
+            // Handle Built-in Route Selection
             const selector = $('route-selector');
             if (selector) {
                 state.videoId = selector.value;
                 if (state.autoPreset && (!state.memory[state.videoId] || state.memory[state.videoId].length === 0)) {
-                    if (state.videoId === 'TpxTlO68CWI') state.memory[state.videoId] = YAMANOTE_DATA;
-                    else if (state.videoId === 'fPRANLWHxCI') state.memory[state.videoId] = YURIKAMOME_DATA;
-                    else if (state.videoId === 'bBqu8tBXXm0') state.memory[state.videoId] = HIBIYA_DATA;
-                } else if (!state.memory[state.videoId]) {
-                    state.memory[state.videoId] = [];
+                    if (state.videoId === 'TpxTlO68CWI') {
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(YAMANOTE_DATA));
+                    } else if (state.videoId === 'f8uxYIoC7zA') {
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(HIBIYA_DATA));
+                    } else if (state.videoId === 'fPRANLWHxCI') {
+                        state.memory[state.videoId] = JSON.parse(JSON.stringify(YURIKAMOME_DATA));
+                    }
+                    /* 
+                    [手動新增教學 / Manual Add Instruction]
+                    如果您要新增第 4 條路線：
+                    1. 在 HTML 約 1167 行的 <select id="route-selector"> 中新增一個 <option value="影片ID">名稱</option>
+                    2. 在下方定義資料常數，例如：const NEW_LINE_DATA = [...];
+                    3. 在這裡新增一個 else if (state.videoId === '影片ID') { state.memory[state.videoId] = NEW_LINE_DATA; }
+                    */
                 }
+            } else if (!state.memory[state.videoId]) {
+                state.memory[state.videoId] = []; // initialize empty if autoPreset is off
             }
 
-            // 初始化外部純境VVVF車箱發聲核心件： (需在此啟動以合乎瀏覽器的播放許可安全法則！)
-            trainSndExtHookPluginLayerModObjVAR = new VVVFEngineSynth();
+            // Unlock Speech Synthesis - Mandatory for some browsers
+            if (window.speechSynthesis) {
+                const dummy = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(dummy);
+            }
 
+            // Start initializing the players with the selected video
+            $('btn-master-launch').disabled = true;
+            $('btn-master-launch').textContent = 'INITIALIZING COCKPIT...';
             launchPlayers();
-        };
+        }
 
         function launchPlayers() {
-            const playerVars = { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestybranding: 1, rel: 0, playsinline: 1 };
+            const playerVars = { autoplay: 1, controls: 0, disablekb: 1, fs: 0, modestybranding: 1, rel: 0, iv_load_policy: 3, playsinline: 1 };
             vPlayer = new YT.Player('visual-player-container', {
-                width: '100%', height: '100%', videoId: state.videoId, playerVars,
+                width: '100%', height: '100%', videoId: state.videoId,
+                playerVars,
                 events: {
                     onReady: onPlayerReady,
                     onStateChange: (e) => { if (e.data === YT.PlayerState.ENDED) vPlayer.seekTo(0); }
@@ -1191,12 +1645,16 @@
         function onPlayerReady() {
             state.playersReady++;
             if (state.playersReady === 2) {
-                vPlayer.mute(); aPlayer.unMute(); aPlayer.setVolume(state.volume);
+                vPlayer.mute();
+                aPlayer.unMute();
+                aPlayer.setVolume(state.volume);
                 $('startup-layer').style.opacity = '0';
                 setTimeout(() => {
                     $('startup-layer').style.display = 'none';
                     $('hud-layer').style.display = 'block';
-                    state.isStarted = true; openDoors(true); updateMasconUI();
+                    state.isStarted = true;
+                    openDoors(true);
+                    updateMasconUI();
                     startEngineLoop();
                 }, 800);
             }
@@ -1205,20 +1663,25 @@
         function startEngineLoop() {
             setInterval(() => {
                 if (!state.isStarted || state.isPaused) return;
-
                 const curTime = vPlayer.getCurrentTime(), vState = vPlayer.getPlayerState();
                 const stations = state.memory[state.videoId] || [];
-
                 $('clock').textContent = new Date().toTimeString().split(' ')[0];
                 $('video-time').textContent = `TIME: ${curTime.toFixed(1)}s`;
 
                 if (stations.length === 0) {
-                    $('stn-name').textContent = '---'; $('stn-meta').textContent = '無路線資料';
+                    $('stn-name').textContent = '---';
+                    $('stn-meta').textContent = '無路線資料';
                 } else {
-
+                    // Initialize/Sync Target Index if needed
                     if (state.targetIndex === -1 || state.targetIndex >= stations.length) {
                         state.targetIndex = stations.findIndex(s => s.time > curTime - 5);
                         if (state.targetIndex === -1) state.targetIndex = stations.length - 1;
+
+                        const stn = stations[state.targetIndex];
+                        if (stn) {
+                            state.baseDist = (stn.time - curTime) * 16.6;
+                            state.traveledMeters = 0;
+                        }
                     }
 
                     const currentTarget = stations[state.targetIndex];
@@ -1228,124 +1691,192 @@
                         $('stn-name').textContent = currentTarget.name;
 
                         if (state.doorsOpen) {
+                            // At Station
                             const timeToClose = Math.max(0, Math.ceil((currentTarget.closeTime || currentTarget.time + 20) - curTime));
                             $('stn-meta').textContent = `月台停靠中 | 預計發車: ${timeToClose}s`;
                             $('stn-name').style.color = 'var(--accent)';
                         } else {
-                            state.evalShown = false;
+                            // En Route or Arriving
+                            // 僅在行駛過程中重置車站評分狀態，防止原地重複評分
+                            if (state.currentSpeed > 0) {
+                                state.evalShown = false;
+                            }
+
+                            // DISTANCE & TIME CALCULATION (Motion-based)
+                            const dist = Math.max(0, Math.floor(state.baseDist - state.traveledMeters));
+                            // Use a standard 60km/h reference for ETA display consistency
+                            const timeToOpen = Math.max(0, Math.ceil(dist / 16.6));
+
                             $('stn-name').style.color = '#fff';
 
-                            /*
-                             * =========== >> 外科微小手術點 << =========== 
-                             * 我們修改了一小點數學程式 (拿掉會死當累加偏差而歸零不了的錯誤儀表寫法)。 
-                             * 改用跟隨著這刻剩下的畫面實景真實還須用掉的分毫微量數字秒數乘車速比例法! (讓停車必準=0距離對決無過標偏差!!): 
-                             */
-                            let strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ = currentTarget.time - curTime;
-                            let simulatedUIVirtualMatchRangeMetterVisualiserVarsOutZZx2CVXCCCXXXXvvTTTCXZXC = 0;
-                            if (strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ > 0) { simulatedUIVirtualMatchRangeMetterVisualiserVarsOutZZx2CVXCCCXXXXvvTTTCXZXC = strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ * Math.max((state.currentSpeed / 3.6) * 0.95, 5.0); }
-
-                            if (strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ > 1.0) {
-                                $('stn-meta').textContent = `距離估約: ${Math.floor(simulatedUIVirtualMatchRangeMetterVisualiserVarsOutZZx2CVXCCCXXXXvvTTTCXZXC)}m | 距該場景耗需: ${Math.ceil(strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ)}s`;
-                                // Announcements keep triggers perfectly ! 
-                                if (Math.abs(strictlyGuaranteedFrameAlignementMathGapSecRmainVVarsXxZVbCccTTDCCXXXvBxxVC13XZVXxZZcccvcZxvXZ - 15) < 0.25) sfx.announce.play().catch(() => { });
+                            if (dist > 15) {
+                                $('stn-meta').textContent = `距離: ${dist}m | 預計開門: ${timeToOpen}s`;
+                                if (Math.abs((currentTarget.time - curTime) - 15) < 0.25) {
+                                    sfx.announce.play().catch(() => { });
+                                }
                             } else {
-                                $('stn-meta').textContent = `目標已極臨到達正前範圍 | 注意列車速度停止..`;
+                                $('stn-meta').textContent = `即將抵達 | 正線上停車`;
                             }
                         }
                     }
 
-                    // Original Automagic Logic Gate
+                    // --- AUTOMATIC DOOR MANAGEMENT ---
                     if (currentTarget && !state.isPaused && state.autoDoor) {
                         const timeToOpen = currentTarget.time - curTime;
-                        const timeToClose = (currentTarget.closeTime || currentTarget.time + 20) - curTime;
-                        if (!state.doorsOpen && state.currentSpeed === 0 && Math.abs(timeToOpen) < 2) openDoors();
-                        if (state.doorsOpen && timeToClose <= 0.2) closeDoors();
+                        const departureTime = currentTarget.closeTime || (currentTarget.time + 20);
+                        const timeToClose = departureTime - curTime;
+
+                        // Auto Open: Speed 0, doors closed, and within arrival window (±2s)
+                        if (!state.doorsOpen && state.currentSpeed === 0 && Math.abs(timeToOpen) < 2) {
+                            openDoors();
+                        }
+
+                        // Auto Close: Doors open, and departure time reached
+                        if (state.doorsOpen && timeToClose <= 0.2) { // 0.2s buffer
+                            closeDoors();
+                        }
                     }
                 }
 
                 updatePhysics();
 
-                if (trainSndExtHookPluginLayerModObjVAR) { trainSndExtHookPluginLayerModObjVAR.processStateHook(state.currentSpeed, state.currentGear); }
-
-                // Check YT Sync (ORIGINAL V7 Logic maintained!) 
+                // --- AUDIO PLAYBACK SYNC ---
                 if (vState === 1 && aPlayer.getPlayerState() !== 1) aPlayer.playVideo();
                 if (vState === 2 && aPlayer.getPlayerState() !== 2) aPlayer.pauseVideo();
             }, 1000 / CONFIG.PHYSICS_HZ);
         }
 
-        // NO CHANGES IN PHYSICS EXPECT REPETITIVE RATE BUG OF VIDEO . 
+
         function updatePhysics() {
             const gear = CONFIG.GEARS[state.currentGear];
             let delta = (gear.accel || 0) - (gear.decel || 0);
 
-            if (state.currentGear === 5) delta = -0.08;
-            else if (state.currentGear < 5) delta *= (1 + state.currentSpeed / 150);
+            // Industrial Physics Refinement
+            if (state.currentGear === 5) {
+                delta = -0.08; // Air resistance only
+            } else if (state.currentGear < 5) {
+                // Braking is more effective at higher speeds
+                delta *= (1 + state.currentSpeed / 150);
+            }
 
             state.currentSpeed += delta * (1.0 / CONFIG.PHYSICS_HZ);
             if (state.currentSpeed < 0.05) state.currentSpeed = 0;
             state.currentSpeed = Math.min(CONFIG.MAX_SPEED, state.currentSpeed);
 
-            if (vPlayer.setPlaybackRate) {
-                let rate = 1.0;
-                if (!state.doorsOpen) {
-                    if (state.currentSpeed <= 0) {
-                        // Fix the ugly stuck 0 pause issue while allowing stops perfectly 
-                        rate = 0.25;
-                        if (vPlayer.getPlayerState() === 1) { vPlayer.pauseVideo(); aPlayer.pauseVideo(); }
-                    } else {
-                        if (vPlayer.getPlayerState() !== 1 && !state.isPaused) { vPlayer.playVideo(); aPlayer.playVideo(); }
-                        if (state.currentSpeed < 10) rate = 0.5; // better stop sliding view than abrupt slowings 
-                    }
-                } else { if (vPlayer.getPlayerState() !== 1) { vPlayer.playVideo(); aPlayer.playVideo(); } }
+            // Update Odometer
+            if (state.currentSpeed > 0) {
+                state.traveledMeters += (state.currentSpeed / 3.6) / CONFIG.PHYSICS_HZ;
+            }
 
-                try {
-                    if (Math.abs(vPlayer.getPlaybackRate() - rate) > 0.05) vPlayer.setPlaybackRate(rate);
-                } catch (Ex_IgnoreS) { }
+            // Playback Rate Modification (Simulator Feeling)
+            if (vPlayer.setPlaybackRate) {
+                let rate;
+                if (state.doorsOpen) {
+                    rate = 1.0;
+                    if (vPlayer.getPlayerState() !== 1) { vPlayer.playVideo(); aPlayer.playVideo(); }
+                } else {
+                    const elapsed = Date.now() - (state.doorCloseTime || 0);
+
+                    if (state.currentSpeed <= 0) {
+                        // 加速前或完全停止時
+                        rate = (elapsed < 15000) ? 1.0 : 0.25;
+                        if (elapsed > 15000) {
+                            // 減速後變 0 點才是停止影片 (且已過 15s 緩衝期)
+                            if (vPlayer.getPlayerState() === 1) { vPlayer.pauseVideo(); aPlayer.pauseVideo(); }
+                        } else {
+                            // 關門後 15 秒內維持正常播
+                            if (vPlayer.getPlayerState() !== 1 && !state.isPaused) { vPlayer.playVideo(); aPlayer.playVideo(); }
+                        }
+                    } else {
+                        // 移動中
+                        if (vPlayer.getPlayerState() !== 1 && !state.isPaused) { vPlayer.playVideo(); aPlayer.playVideo(); }
+
+                        // 關門起步 15 秒內，且車速尚低時，強制 1.0 倍速 (正常播)
+                        if (elapsed < 15000 && state.currentSpeed < 15) {
+                            rate = 1.0;
+                        } else {
+                            // 其他情況根據車速增快影片，/40.0 讓低速時感覺更快
+                            rate = Math.max(0.25, state.currentSpeed / 40.0);
+                        }
+                    }
+                }
+
+                rate = Math.max(0.25, Math.min(3.0, rate));
+                if (Math.abs(rate - state.lastRate) > 0.05) {
+                    vPlayer.setPlaybackRate(rate);
+                    state.lastRate = rate;
+                }
             }
 
             $('speed-value').textContent = Math.floor(state.currentSpeed);
             $('speed-value').style.color = gear.color;
             $('speed-value').style.textShadow = `0 0 30px ${gear.color}aa`;
-            if (state.currentSpeed > 115) $('speed-value').style.color = 'var(--danger)';
+
+            // Overspeed Warning
+            if (state.currentSpeed > 115) {
+                $('speed-value').style.color = 'var(--danger)';
+            }
         }
 
-
-        // =========== RAW HANDLING RESTORED FULLY ===========
         function applyGear(idx) {
-            if (state.doorsOpen && idx > 5) return;
+            if (state.doorsOpen && idx > 5) return; // Interlock: No power when doors open
             if (state.currentGear === idx) return;
             state.currentGear = idx;
 
-            if (navigator.vibrate) { if (idx === 0) navigator.vibrate([30, 30, 30]); else if (idx === 5) navigator.vibrate(10); else navigator.vibrate(15); }
-            if (idx > 5) { vPlayer.playVideo(); aPlayer.playVideo(); }
+            // Precise Haptic Patterns
+            if (navigator.vibrate) {
+                if (idx === 0) navigator.vibrate([30, 30, 30]); // Emergency
+                else if (idx === 5) navigator.vibrate(10); // Neutral
+                else navigator.vibrate(15);
+            }
+
+            if (idx > 5) { // Power
+                clearTimeout(state.standbyTimer);
+                state.standbyActive = false;
+                vPlayer.playVideo(); aPlayer.playVideo();
+            }
             updateMasconUI();
         }
 
         function updateMasconUI() {
-            const handle = $('mascon-handle'); const gear = CONFIG.GEARS[state.currentGear];
+            const handle = $('mascon-handle');
+            const gear = CONFIG.GEARS[state.currentGear];
             handle.style.top = `${((10 - state.currentGear) / 10) * 100}%`;
-            handle.textContent = gear.name; $('gear-label').textContent = gear.name; $('gear-label').style.color = gear.color;
+            handle.textContent = gear.name;
+            $('gear-label').textContent = gear.name;
+            $('gear-label').style.color = gear.color;
         }
 
-        // (Original LTS code handling restored! ) ! 
         function handleAction(code) {
             if (!state.isStarted || state.isPaused) return;
 
             if (code === 'KeyZ') {
                 if (state.doorsOpen) return;
                 applyGear(Math.min(10, state.currentGear + 1));
-            } else if (code === 'KeyS') { applyGear(Math.max(0, state.currentGear - 1)); }
-            else if (code === 'KeyA') { applyGear(5); }
-            else if (code === 'KeyY') { applyGear(0); }
-            else if (code === 'KeyF') { $('btn-fullscreen').click(); }
-            // User requested SYNC Button functionality !!! HERE IT REMAINS AS REQUESTED!!: 
-            else if (code === 'KeyX' || code === 'Sync') {
-                const curT = vPlayer.getCurrentTime(); aPlayer.seekTo(curT, true);
-                console.log("[LTS_V7] Audio stream force synchronizer dispatched!!");
-            }
-            else if (code === 'KeyQ') { if (state.currentSpeed === 0 && !state.doorsOpen) openDoors(); }
-            else if (code === 'KeyE') { if (state.doorsOpen) closeDoors(); }
-            else if (code === 'Space' || code === 'ToggleDoors') {
+            } else if (code === 'KeyS') {
+                applyGear(Math.max(0, state.currentGear - 1));
+            } else if (code === 'KeyA') {
+                applyGear(5);
+            } else if (code === 'KeyY') {
+                applyGear(0);
+            } else if (code === 'KeyF') {
+                $('btn-fullscreen').click();
+            } else if (code === 'KeyX' || code === 'Sync') {
+                const curT = vPlayer.getCurrentTime();
+                aPlayer.seekTo(curT, true);
+                // Refresh distance tracking point
+                const currentTgt = (state.memory[state.videoId] || [])[state.targetIndex];
+                if (currentTgt) {
+                    state.baseDist = Math.max(0, (currentTgt.time - curT) * 16.6);
+                    state.traveledMeters = 0;
+                }
+            } else if (code === 'KeyQ') {
+                if (state.currentSpeed > 0 || state.doorsOpen) return;
+                openDoors();
+            } else if (code === 'KeyE') {
+                if (!state.doorsOpen) return;
+                closeDoors();
+            } else if (code === 'Space' || code === 'ToggleDoors') {
                 if (state.currentSpeed > 0) return;
                 state.doorsOpen ? closeDoors() : openDoors();
             }
@@ -1353,16 +1884,21 @@
 
         function openDoors(skipDiscovery = false) {
             const curTime = vPlayer.getCurrentTime();
-            state.doorsOpen = true; sfx.doorIn.play().catch(() => { });
+            state.doorsOpen = true;
+            state.doorCloseTime = 0;
+            state.traveledMeters = 0;
+            state.baseDist = 0;
+            sfx.doorIn.play().catch(() => { });
 
-            // Critical Sync !
+            // Critical Sync point
             if (aPlayer && aPlayer.seekTo) aPlayer.seekTo(curTime, true);
-            const hud = $('door-hud'); hud.className = 'glass-card door-open'; hud.textContent = '車門開啟';
-
+            const hud = $('door-hud');
+            hud.className = 'glass-card door-open';
+            hud.textContent = '車門開啟';
             if (state.currentGear > 5) applyGear(5);
             vPlayer.playVideo(); aPlayer.playVideo();
 
-            // Native Eval & Discover codes completely untouched:
+            // Manual Station Sync & Discovery
             const stations = state.memory[state.videoId] || [];
             const idx = stations.findIndex(s => Math.abs(s.time - curTime) < 60);
 
@@ -1373,85 +1909,126 @@
                     showEvaluation(diff);
                     state.evalShown = true;
                 }
+                // Automatic Data Update
                 stn.time = curTime;
                 state.targetIndex = idx;
                 saveMemory();
             } else if (!skipDiscovery && !stations.find(s => Math.abs(s.time - curTime) < 40)) {
                 $('smart-discovery').style.display = 'block';
-                $('new-stn-name').value = ""; $('new-stn-name').focus();
+                $('new-stn-name').value = "";
+                $('new-stn-name').focus();
             }
         }
 
+
         function closeDoors() {
             const curTime = vPlayer.getCurrentTime();
-            state.doorsOpen = false; sfx.doorOut.play().catch(() => { });
+            state.doorsOpen = false;
+            state.doorCloseTime = Date.now();
+            sfx.doorOut.play().catch(() => { });
 
+            // Critical Sync point
             if (aPlayer && aPlayer.seekTo) aPlayer.seekTo(curTime, true);
-            const hud = $('door-hud'); hud.className = 'glass-card door-closed'; hud.textContent = '車門鎖定';
+            const hud = $('door-hud');
+            hud.className = 'glass-card door-closed';
+            hud.textContent = '車門鎖定';
 
             const stations = state.memory[state.videoId] || [];
             const idx = stations.findIndex(s => Math.abs(s.time - curTime) < 60);
             if (idx !== -1) {
-                stations[idx].closeTime = curTime;
+                const stn = stations[idx];
+                stn.closeTime = curTime;
+                // Move to next station target
                 state.targetIndex = Math.min(stations.length - 1, idx + 1);
+
+                const nextStn = stations[state.targetIndex];
+                if (nextStn) {
+                    state.baseDist = (nextStn.time - curTime) * 16.6;
+                    state.traveledMeters = 0;
+                }
+
                 saveMemory();
             }
         }
 
-        function saveMemory() { localStorage.setItem('edgerail_st_v5', JSON.stringify(state.memory)); refreshStationList(); }
 
+        function saveMemory() {
+            localStorage.setItem('edgerail_st_v5', JSON.stringify(state.memory));
+            refreshStationList();
+        }
 
-        // =============== All Modals Native Hookers Re-assigned Correctly! ==============
+        // Modal Helpers
+        function toggleModal(id) {
+            const m = $(id);
+            const isVisible = m.style.display === 'block';
+            hideModals();
+            if (!isVisible) m.style.display = 'block';
+        }
 
-        function toggleModal(id) { const m = $(id); const isVisible = m.style.display === 'block'; hideModals(); if (!isVisible) m.style.display = 'block'; }
         function hideModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
-        document.querySelectorAll('.close-modal').forEach(b => { b.onclick = hideModals; });
 
-        // Unmodified mapping precisely as your text!! : 
+        document.querySelectorAll('.close-modal').forEach(b => {
+            b.onclick = hideModals;
+        });
+
         $('btn-route-config').onclick = () => { refreshStationList(); toggleModal('modal-route'); };
         $('btn-video-config').onclick = () => toggleModal('modal-video');
         $('btn-help-trigger').onclick = () => toggleModal('modal-help');
         $('btn-settings-trigger').onclick = () => toggleModal('modal-settings');
-
+        $('btn-fullscreen').onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => alert(`Error: ${e.message}`));
+            } else {
+                document.exitFullscreen();
+            }
+        };
         $('btn-quick-sync').onclick = () => handleAction('Sync');
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(e => console.error(e)); }
-            else { document.exitFullscreen(); }
-        }
-
         $('btn-pause-toggle').onclick = () => {
             state.isPaused = !state.isPaused;
             if (state.isPaused) { vPlayer.pauseVideo(); aPlayer.pauseVideo(); $('btn-pause-toggle').textContent = '▶'; }
             else { vPlayer.playVideo(); aPlayer.playVideo(); $('btn-pause-toggle').textContent = '⏸'; }
         };
 
+        // Settings Listeners
         $('volume-slider').oninput = (e) => {
-            state.volume = e.target.value; $('volume-value').textContent = state.volume;
-            if (aPlayer && aPlayer.setVolume) aPlayer.setVolume(state.volume);
+            const val = e.target.value;
+            state.volume = val;
+            $('volume-value').textContent = val;
+            if (aPlayer && aPlayer.setVolume) aPlayer.setVolume(val);
         };
-        $('auto-door-toggle').onchange = (e) => { state.autoDoor = e.target.checked; };
-        $('auto-preset-toggle').onchange = (e) => { state.autoPreset = e.target.checked; };
 
+        $('auto-door-toggle').onchange = (e) => {
+            state.autoDoor = e.target.checked;
+        };
+
+        $('auto-preset-toggle').onchange = (e) => {
+            state.autoPreset = e.target.checked;
+        };
 
         function updateTimeline(curTime, stations) {
             const container = $('route-timeline');
             if (stations.length === 0) { container.style.display = 'none'; return; }
             container.style.display = 'block';
 
-            const lastStn = stations[stations.length - 1]; const totalDuration = lastStn.time + 60;
+            const lastStn = stations[stations.length - 1];
+            const totalDuration = lastStn.time + 60;
             container.innerHTML = stations.map((s, i) => {
                 const pos = (s.time / totalDuration) * 100;
                 let cls = 'timeline-node';
-                if (i === state.targetIndex) cls += ' active'; else if (curTime > s.time) cls += ' passed';
+                if (i === state.targetIndex) cls += ' active';
+                else if (curTime > s.time) cls += ' passed';
                 return `<div class="${cls}" style="top: ${pos}%"></div>`;
             }).join('');
         }
 
+        // Station Management
         function refreshStationList() {
-            const list = $('stn-list-scroll'); const data = state.memory[state.videoId] || [];
-            if (data.length === 0) { list.innerHTML = '<div style="opacity:0.3;text-align:center;padding:20px;">NO ROUTE DATA</div>'; return; }
-
+            const list = $('stn-list-scroll');
+            const data = state.memory[state.videoId] || [];
+            if (data.length === 0) {
+                list.innerHTML = '<div style="opacity:0.3;text-align:center;padding:20px;">NO ROUTE DATA IN MEMORY</div>';
+                return;
+            }
             list.innerHTML = data.map((s, i) => `
                 <div class="stn-item" style="display: flex; flex-direction: column; align-items: stretch; gap: 8px;">
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -1459,23 +2036,36 @@
                         <button class="action-btn btn-red" onclick="removeStn(${i})" style="width:32px; height:32px; padding:0; border-radius:50%; margin:0;">×</button>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-                        <div><span style="opacity:0.4; font-size:9px;">ARRIVE (S)</span>
-                        <input type="number" step="0.1" value="${s.time}" onchange="updateStn(${i}, 'time', this.value)" style="height:30px; padding:4px;"></div>
-                        <div><span style="opacity:0.4; font-size:9px;">DEPART (S)</span>
-                        <input type="number" step="0.1" value="${s.closeTime || 0}" onchange="updateStn(${i}, 'closeTime', this.value)" style="height:30px; padding:4px;"></div>
+                        <div>
+                            <span style="opacity:0.4; font-size:9px;">ARRIVE (S)</span>
+                            <input type="number" step="0.1" value="${s.time}" onchange="updateStn(${i}, 'time', this.value)" style="height:30px; padding:4px;">
+                        </div>
+                        <div>
+                            <span style="opacity:0.4; font-size:9px;">DEPART (S)</span>
+                            <input type="number" step="0.1" value="${s.closeTime || 0}" onchange="updateStn(${i}, 'closeTime', this.value)" style="height:30px; padding:4px;">
+                        </div>
                     </div>
                 </div>
             `).join('');
-            $('bulk-io').value = JSON.stringify(data, null, 2);
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec.toString().padStart(2, '0')}`;
         }
 
         window.updateStn = (i, key, val) => {
-            state.memory[state.videoId][i][key] = (key === 'name') ? val : parseFloat(val);
+            const numVal = (key === 'name') ? val : parseFloat(val);
+            state.memory[state.videoId][i][key] = numVal;
             if (key === 'time') state.memory[state.videoId].sort((a, b) => a.time - b.time);
             saveMemory();
         };
 
-        window.removeStn = (i) => { state.memory[state.videoId].splice(i, 1); saveMemory(); };
+        window.removeStn = (i) => {
+            state.memory[state.videoId].splice(i, 1);
+            saveMemory();
+        };
 
         window.memorizeLocation = () => {
             const name = $('new-stn-name').value.trim() || '未命名站點';
@@ -1483,62 +2073,212 @@
             if (!state.memory[state.videoId]) state.memory[state.videoId] = [];
             state.memory[state.videoId].push({ name, time, closeTime: time + 20 });
             state.memory[state.videoId].sort((a, b) => a.time - b.time);
-            saveMemory(); $('smart-discovery').style.display = 'none';
+            saveMemory();
+            $('smart-discovery').style.display = 'none';
         }
 
-        window.importData = () => { try { state.memory[state.videoId] = JSON.parse($('bulk-io').value).sort((a, b) => a.time - b.time); saveMemory(); alert('匯入資料生效!'); } catch (e) { } };
-        window.exportDataToClipboard = () => { navigator.clipboard.writeText($('bulk-io').value); }
-        window.clearFleetData = () => { if (confirm("此舉為銷毀本地清單動作無法挽救，接受否？")) { state.memory[state.videoId] = []; saveMemory(); } }
+        // Bulk IO
+        window.importData = () => {
+            try {
+                let raw = $('bulk-io').value.trim();
+                if (!raw) return alert("輸入區為空");
 
+                if (raw.startsWith('http')) {
+                    const m = raw.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+                    if (m) { $('yt-url-input').value = raw; $('btn-fetch-yt').click(); return; }
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    // Try parsing as the custom text format: Name Arrival Departure
+                    const lines = raw.split('\n').filter(l => l.trim());
+                    data = lines.map(line => {
+                        const parts = line.trim().split(/\s+/);
+                        if (parts.length < 3) return null;
+
+                        const departure = parts.pop();
+                        const arrival = parts.pop();
+                        const name = parts.join(' ');
+
+                        const t2s = (t) => {
+                            if (!t || t === '---') return null;
+                            const p = t.split(':');
+                            if (p.length === 2) return parseInt(p[0]) * 60 + parseFloat(p[1]);
+                            return parseFloat(t);
+                        };
+
+                        const arr = t2s(arrival);
+                        const dep = t2s(departure);
+
+                        return {
+                            name,
+                            time: arr === null ? (dep !== null ? 0 : 0) : arr,
+                            closeTime: dep === null ? 0 : dep
+                        };
+                    }).filter(x => x);
+
+                    if (data.length === 0) throw new Error("Format error");
+                }
+
+                if (Array.isArray(data)) {
+                    if (!state.videoId) return alert("匯入站點前請先連結影像");
+                    state.memory[state.videoId] = data.map(s => ({
+                        name: s.name || '未命名站點',
+                        time: parseFloat(s.time) || 0,
+                        closeTime: parseFloat(s.closeTime) || 0
+                    })).sort((a, b) => a.time - b.time);
+                    saveMemory();
+                    alert(`成功匯入 ${state.memory[state.videoId].length} 個站點`);
+                } else if (typeof data === 'object') {
+                    Object.assign(state.memory, data);
+                    saveMemory();
+                    alert("工作環境已完全恢復");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("匯入失敗：格式不支援或資料損壞");
+            }
+        }
+
+        window.exportDataToClipboard = () => {
+            const data = state.memory[state.videoId] || [];
+            const str = JSON.stringify(data, null, 2);
+            navigator.clipboard.writeText(str);
+            $('bulk-io').value = str;
+        }
+
+        window.downloadData = () => {
+            const data = state.memory[state.videoId] || [];
+            if (data.length === 0) return alert("無資料可供匯出");
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `route_${state.videoId}_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.clearFleetData = () => {
+            if (confirm("警告：確定要清除此影片的所有站點資料？此操作無法還原。")) {
+                state.memory[state.videoId] = [];
+                saveMemory();
+            }
+        }
+
+        // Video Switching
         let pendingVid = null;
         $('btn-fetch-yt').onclick = async () => {
             const url = $('yt-url-input').value;
             const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
             if (!m) return alert("無效的網址");
+
             $('btn-fetch-yt').textContent = '獲取中...';
             try {
                 const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${m[1]}&format=json`);
                 const data = await res.json();
-                pendingVid = m[1]; $('yt-preview-title').textContent = data.title; $('yt-preview').style.display = 'block'; $('yt-apply-group').style.display = 'grid'; $('btn-fetch-yt').style.display = 'none';
-            } catch (e) { alert("獲取失敗"); $('btn-fetch-yt').textContent = '讀取資料'; }
+                pendingVid = m[1];
+                $('yt-preview-title').textContent = data.title;
+                $('yt-preview').style.display = 'block';
+                $('yt-apply-group').style.display = 'grid';
+                $('btn-fetch-yt').style.display = 'none';
+            } catch (e) {
+                alert("獲取失敗");
+                $('btn-fetch-yt').textContent = '讀取資料';
+            }
         };
 
-        $('btn-cancel-yt').onclick = () => { pendingVid = null; $('yt-preview').style.display = 'none'; $('yt-apply-group').style.display = 'none'; $('btn-fetch-yt').style.display = 'block'; $('btn-fetch-yt').textContent = '讀取資料'; };
+        $('btn-cancel-yt').onclick = () => {
+            pendingVid = null;
+            $('yt-preview').style.display = 'none';
+            $('yt-apply-group').style.display = 'none';
+            $('btn-fetch-yt').style.display = 'block';
+            $('btn-fetch-yt').textContent = '讀取資料';
+        };
 
         $('btn-apply-yt').onclick = () => {
-            state.videoId = pendingVid; vPlayer.loadVideoById(state.videoId); aPlayer.loadVideoById(state.videoId);
-            state.currentSpeed = 0; state.targetIndex = -1;
+            state.videoId = pendingVid;
+            vPlayer.loadVideoById(state.videoId);
+            aPlayer.loadVideoById(state.videoId);
+            state.currentSpeed = 0;
+            state.targetIndex = -1; // Reset target on new video
             if (!state.memory[state.videoId]) state.memory[state.videoId] = [];
-            $('stn-name').textContent = '---'; $('stn-meta').textContent = '讀取中...'; state.doorsOpen = true; openDoors(true); hideModals(); refreshStationList();
+            $('stn-name').textContent = '---'; // Force UI update
+            $('stn-meta').textContent = '讀取中...';
+            state.doorsOpen = true;
+            openDoors(true); // skip discovery popup
+            hideModals();
+
+            refreshStationList();
         };
 
-        // UI Evaluator System unchanged (100% Native Code preserved!!) 
+        // Evaluation
         function showEvaluation(diff) {
-            state.evalShown = true; const overlay = $('eval-overlay'); const grade = overlay.querySelector('.eval-grade'); const dist = (diff * 16.6).toFixed(1);
-            let text = '不佳', color = 'var(--danger)';
-            if (diff < 0.3) { text = '完美'; color = 'gold'; }
-            else if (diff < 1.0) { text = '優秀'; color = 'var(--success)'; }
-            else if (diff < 3.0) { text = '良好'; color = 'var(--accent)'; }
+            state.evalShown = true;
+            const overlay = $('eval-overlay');
+            const grade = overlay.querySelector('.eval-grade');
+            const dist = (diff * 16.6).toFixed(1);
+
+            let text = '不佳', color = 'var(--danger)', comment = "";
+            if (diff < 0.3) {
+                text = '完美'; color = 'gold';
+                comment = "極致的控制力！誤差不到 30 釐米，乘客完全感覺不到晃動。";
+            }
+            else if (diff < 1.0) {
+                text = '優秀'; color = 'var(--success)';
+                comment = "相當準確的停靠。繼續保持這種穩定的煞車曲線。";
+            }
+            else if (diff < 3.0) {
+                text = '良好'; color = 'var(--accent)';
+                comment = "安全停靠，但仍有進步空間。建議提早進入 B1 階段。";
+            } else {
+                comment = "停車誤差較大。請注意 TASC 系統的建議減速點。";
+            }
+
             grade.textContent = text; grade.style.color = color;
-            $('eval-detail').textContent = `時軌定位補幀評差 : ${dist}m (${diff.toFixed(2)}s)`;
-            overlay.style.opacity = '1'; setTimeout(() => { overlay.style.opacity = '0'; }, 3500);
+            $('eval-detail').textContent = `誤差: ${dist}m (${diff.toFixed(2)}s)`;
+            overlay.style.opacity = '1';
+            setTimeout(() => { overlay.style.opacity = '0'; }, 3500);
         }
 
+        // Jump Menu
         window.openJumpMenu = (dir) => {
-            const time = vPlayer.getCurrentTime(); const stations = state.memory[state.videoId] || []; let filtered = [];
-            if (dir > 0) { $('jump-title').textContent = '後一站'; filtered = stations.filter(s => s.time > time + 5); }
-            else { $('jump-title').textContent = '前一站'; filtered = [...stations].filter(s => s.time < time - 5).reverse(); }
+            const time = vPlayer.getCurrentTime();
+            const stations = state.memory[state.videoId] || [];
+            let filtered = [];
+
+            if (dir > 0) {
+                $('jump-title').textContent = '下一站';
+                filtered = stations.filter(s => s.time > time + 5);
+            } else {
+                $('jump-title').textContent = '上一站';
+                filtered = [...stations].filter(s => s.time < time - 5).reverse();
+            }
 
             const list = $('jump-list');
-            if (filtered.length === 0) list.innerHTML = '<p style="opacity:0.3;text-align:center;">此軸時距區塊空缺.</p>';
+            if (filtered.length === 0) list.innerHTML = '<p style="opacity:0.3;text-align:center;">空</p>';
             else {
-                list.innerHTML = filtered.map(s => `<button class="action-btn" onclick="executeJump(${s.time})">${s.name}</button>`).join('');
+                list.innerHTML = filtered.map(s => `
+                    <button class="action-btn" onclick="executeJump(${s.time})">
+                        ${s.name} <span style="float:right;opacity:0.5;">${formatTime(s.time)}</span>
+                    </button>
+                `).join('');
             }
             toggleModal('jump-picker');
         }
 
-        window.executeJump = (t) => { vPlayer.seekTo(t, true); aPlayer.seekTo(t, true); state.currentSpeed = 0; state.doorsOpen = true; openDoors(true); hideModals(); }
+        window.executeJump = (t) => {
+            vPlayer.seekTo(t, true);
+            aPlayer.seekTo(t, true);
+            state.currentSpeed = 0;
+            state.doorsOpen = true;
+            openDoors(true); // This handles baseDist reset, skip discovery
+            hideModals();
+        }
 
+        // Touch Interaction
         const track = $('mascon-track');
         const handleDrag = (e) => {
             const rect = track.getBoundingClientRect();
@@ -1546,6 +2286,7 @@
             const percent = Math.max(0, Math.min(1, y / rect.height));
             applyGear(10 - Math.round(percent * 10));
         };
+
         $('mascon-handle').addEventListener('touchstart', (e) => {
             window.addEventListener('touchmove', handleDrag);
             window.addEventListener('touchend', () => window.removeEventListener('touchmove', handleDrag), { once: true });
@@ -1555,6 +2296,7 @@
             window.addEventListener('mouseup', () => window.removeEventListener('mousemove', handleDrag), { once: true });
         });
 
+        // Key Listeners
         window.addEventListener('keydown', (e) => {
             if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
             handleAction(e.code);
